@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: Flags Contract (Registration Webapp)
+  version: 1.0.0
+paths:
+  /accounts/flags:
+    get:
+      summary: Get participant-facing flags
+      responses:
+        '200':
+          description: Flags object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  flags:
+                    type: object
+                  stage:
+                    type: object
+        '401':
+          description: you are not logged in
+        '500':
+          description: internal server error
+components:
+  schemas:
+    Flags:
+      type: object
+      properties:
+        flags:
+          type: object
+        stage:
+          type: object
