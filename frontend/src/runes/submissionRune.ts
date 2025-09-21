@@ -1,20 +1,14 @@
-import { writable } from "svelte/store";
-import api from "../lib/apiClient";
-import { teamRune } from "./teamRune";
-
-export type Submission = {
-  name: string;
-  desc: string;
-  repo: string;
-  pres: string;
-};
+import { writable } from 'svelte/store'
+import api from '../lib/apiClient'
+import { teamRune } from './teamRune'
+import type { Submission } from '../types/team'
 
 /**
  * submissionRune store
  * - holds the team's submission object (name, desc, repo, pres) or null
  * - updated indirectly by the update*() functions which write to the backend
  */
-export const submissionRune = writable<Submission | null>(null);
+export const submissionRune = writable<Submission | null>(null)
 
 // NOTE: Debounce belongs in the UI. These functions perform the network
 // call and update the teamRune on success. UI components should debounce
@@ -27,10 +21,10 @@ export const submissionRune = writable<Submission | null>(null);
  * - Side effects: calls `refreshTeamSubmission()` which updates `teamRune`
  */
 export async function updateName(name: string) {
-  const res = await api.patch("/teams/submissions/name", { name });
+  const res = await api.patch('/teams/submissions/name', { name })
   // refresh team submission
-  await refreshTeamSubmission();
-  return res.data;
+  await refreshTeamSubmission()
+  return res.data
 }
 
 /**
@@ -41,9 +35,9 @@ export async function updateName(name: string) {
  * - Side effects: refreshes team/submission state
  */
 export async function updateDesc(desc: string) {
-  const res = await api.patch("/teams/submissions/desc", { desc });
-  await refreshTeamSubmission();
-  return res.data;
+  const res = await api.patch('/teams/submissions/desc', { desc })
+  await refreshTeamSubmission()
+  return res.data
 }
 
 /**
@@ -51,9 +45,9 @@ export async function updateDesc(desc: string) {
  * - Purpose: Update the repository URL for the submission.
  */
 export async function updateRepo(repo: string) {
-  const res = await api.patch("/teams/submissions/repo", { repo });
-  await refreshTeamSubmission();
-  return res.data;
+  const res = await api.patch('/teams/submissions/repo', { repo })
+  await refreshTeamSubmission()
+  return res.data
 }
 
 /**
@@ -61,9 +55,9 @@ export async function updateRepo(repo: string) {
  * - Purpose: Update the presentation URL/identifier for the submission.
  */
 export async function updatePres(pres: string) {
-  const res = await api.patch("/teams/submissions/pres", { pres });
-  await refreshTeamSubmission();
-  return res.data;
+  const res = await api.patch('/teams/submissions/pres', { pres })
+  await refreshTeamSubmission()
+  return res.data
 }
 
 /**
@@ -75,9 +69,9 @@ export async function updatePres(pres: string) {
  */
 async function refreshTeamSubmission() {
   try {
-    const res = await api.get("/teams");
-    teamRune.set(res.data);
-    submissionRune.set(res.data.submission || null);
+    const res = await api.get('/teams')
+    teamRune.set(res.data)
+    submissionRune.set(res.data.submission || null)
   } catch (e) {
     // ignore for now; callers/tests can handle errors
   }

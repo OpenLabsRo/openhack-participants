@@ -1,20 +1,13 @@
-import { writable } from "svelte/store";
-import api, { setAuthToken } from "../lib/apiClient";
-
-export type Account = {
-  id: string;
-  email: string;
-  password: string;
-  name: string;
-  teamID: string; // empty string when no team
-};
+import { writable } from 'svelte/store'
+import api, { setAuthToken } from '../lib/apiClient'
+import type { Account } from '../types/account'
 
 /**
  * accountRune store
  * - holds the currently authenticated account or null when logged out
  * - updated by `register`, `login`, and `whoami`
  */
-export const accountRune = writable<Account | null>(null);
+export const accountRune = writable<Account | null>(null)
 
 /**
  * check(email)
@@ -25,8 +18,8 @@ export const accountRune = writable<Account | null>(null);
  * - Error modes: throws if the network call fails
  */
 export async function check(email: string) {
-  const res = await api.post("/accounts/check", { email });
-  return res.data; // { registered: boolean }
+  const res = await api.post('/accounts/check', { email })
+  return res.data // { registered: boolean }
 }
 
 /**
@@ -38,14 +31,14 @@ export async function check(email: string) {
  * - Error modes: throws if register fails (backend validation, network error)
  */
 export async function register(email: string, password: string) {
-  const res = await api.post("/accounts/register", {
+  const res = await api.post('/accounts/register', {
     email,
     password,
-  });
-  const { token, account } = res.data;
-  setAuthToken(token);
-  accountRune.set(account);
-  return account;
+  })
+  const { token, account } = res.data
+  setAuthToken(token)
+  accountRune.set(account)
+  return account
 }
 
 /**
@@ -57,11 +50,11 @@ export async function register(email: string, password: string) {
  * - Error modes: throws on auth failure or network error
  */
 export async function login(email: string, password: string) {
-  const res = await api.post("/accounts/login", { email, password });
-  const { token, account } = res.data;
-  setAuthToken(token);
-  accountRune.set(account);
-  return account;
+  const res = await api.post('/accounts/login', { email, password })
+  const { token, account } = res.data
+  setAuthToken(token)
+  accountRune.set(account)
+  return account
 }
 
 /**
@@ -73,9 +66,9 @@ export async function login(email: string, password: string) {
  * - Error modes: throws if the token is invalid or network fails
  */
 export async function whoami() {
-  const res = await api.get("/accounts/whoami");
-  accountRune.set(res.data);
-  return res.data;
+  const res = await api.get('/accounts/whoami')
+  accountRune.set(res.data)
+  return res.data
 }
 
 /**
@@ -84,6 +77,6 @@ export async function whoami() {
  * - Side effects: removes stored token via setAuthToken(null) and clears `accountRune`
  */
 export function logout() {
-  setAuthToken(null);
-  accountRune.set(null);
+  setAuthToken(null)
+  accountRune.set(null)
 }

@@ -1,31 +1,22 @@
-import { writable } from "svelte/store";
-import api from "../lib/apiClient";
-
-export type Flags = {
-  flags: Record<string, boolean>;
-  stage: {
-    id: string;
-    name: string;
-    turnoff: string[];
-    turnon: string[];
-  };
-};
+import { writable } from 'svelte/store'
+import api from '../lib/apiClient'
+import type { Flags } from '../types/flags'
 
 /**
  * flagsRune store
  * - holds feature flags and current stage from the backend
  */
-export const flagsRune = writable<Flags | null>(null);
+export const flagsRune = writable<Flags | null>(null)
 
-let pollIntervalMs = 5000;
-let pollHandle: number | null = null;
+let pollIntervalMs = 5000
+let pollHandle: number | null = null
 
 /**
  * configurePolling(ms)
  * - Purpose: adjust the poll interval used by startPolling
  */
 export function configurePolling(ms: number) {
-  pollIntervalMs = ms;
+  pollIntervalMs = ms
 }
 
 /**
@@ -35,9 +26,9 @@ export function configurePolling(ms: number) {
  */
 export async function fetchFlags() {
   // Requires Authorization: Bearer token
-  const res = await api.get("/accounts/flags");
-  flagsRune.set(res.data);
-  return res.data;
+  const res = await api.get('/accounts/flags')
+  flagsRune.set(res.data)
+  return res.data
 }
 
 /**
@@ -46,11 +37,11 @@ export async function fetchFlags() {
  * - Behavior: clears any existing timer first. Errors from fetchFlags are swallowed.
  */
 export function startPolling() {
-  stopPolling();
+  stopPolling()
   pollHandle = setInterval(
     () => fetchFlags().catch(() => {}),
     pollIntervalMs
-  ) as unknown as number;
+  ) as unknown as number
 }
 
 /**
@@ -59,8 +50,8 @@ export function startPolling() {
  */
 export function stopPolling() {
   if (pollHandle) {
-    clearInterval(pollHandle);
-    pollHandle = null;
+    clearInterval(pollHandle)
+    pollHandle = null
   }
 }
 
@@ -77,5 +68,5 @@ export function subscribeWs() {
   // TODO: implement when backend WS API is available
   return () => {
     /* unsubscribe */
-  };
+  }
 }

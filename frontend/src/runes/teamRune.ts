@@ -1,25 +1,13 @@
-import { writable } from "svelte/store";
-import api from "../lib/apiClient";
-
-export type Team = {
-  id: string;
-  name: string;
-  members: string[];
-  submission: {
-    name: string;
-    desc: string;
-    repo: string;
-    pres: string;
-  };
-  deleted: boolean;
-};
+import { writable } from 'svelte/store'
+import api from '../lib/apiClient'
+import type { Team } from '../types/team'
 
 /**
  * teamRune store
  * - holds the current team object for the signed-in user, or null when not on a team
  * - updated by getTeam, createTeam, join, leave, and kick
  */
-export const teamRune = writable<Team | null>(null);
+export const teamRune = writable<Team | null>(null)
 
 /**
  * getTeam()
@@ -30,9 +18,9 @@ export const teamRune = writable<Team | null>(null);
  * - Error modes: throws on network failure
  */
 export async function getTeam() {
-  const res = await api.get("/teams");
-  teamRune.set(res.data);
-  return res.data;
+  const res = await api.get('/teams')
+  teamRune.set(res.data)
+  return res.data
 }
 
 /**
@@ -43,9 +31,9 @@ export async function getTeam() {
  * - Side effects: updates `teamRune`
  */
 export async function createTeam(name: string) {
-  const res = await api.post("/teams", { name });
-  teamRune.set(res.data);
-  return res.data;
+  const res = await api.post('/teams', { name })
+  teamRune.set(res.data)
+  return res.data
 }
 
 /**
@@ -56,9 +44,9 @@ export async function createTeam(name: string) {
  * - Side effects: updates `teamRune`
  */
 export async function join(teamId: string) {
-  const res = await api.post(`/teams/${teamId}/join`);
-  teamRune.set(res.data);
-  return res.data;
+  const res = await api.post(`/teams/${teamId}/join`)
+  teamRune.set(res.data)
+  return res.data
 }
 
 /**
@@ -69,9 +57,9 @@ export async function join(teamId: string) {
  * - Side effects: clears `teamRune`
  */
 export async function leave() {
-  const res = await api.post("/teams/leave");
-  teamRune.set(null);
-  return res.data;
+  const res = await api.post('/teams/leave')
+  teamRune.set(null)
+  return res.data
 }
 
 /**
@@ -82,8 +70,8 @@ export async function leave() {
  * - Side effects: calls `getTeam()` which updates `teamRune`
  */
 export async function kick(accountId: string) {
-  const res = await api.post("/teams/kick", { accountId });
+  const res = await api.post('/teams/kick', { accountId })
   // after kick, refresh team
-  await getTeam();
-  return res.data;
+  await getTeam()
+  return res.data
 }
