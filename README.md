@@ -1,82 +1,59 @@
-# OpenHack Participants — Registration Webapp
+Registration Webapp frontend scaffold
 
-This repository contains artifacts for the Registration Webapp (frontend spec, runes, and contract tests). It includes a small Svelte + TypeScript frontend scaffold (no UI yet), contract YAMLs used for spec-only testing, and unit tests for the client runes.
+This folder contains a minimal Svelte + TypeScript scaffold and integration
+modules (apiClient and runes). No UI components are provided — the scaffold
+is intentionally minimal so you can implement components later.
 
-## Quick overview
+Quickstart
 
-- Frontend source: `frontend/src`
-- Frontend tests: `frontend/test`
-- Contract specs & tests: `specs/registration-webapp/contracts` and `specs/registration-webapp/tests`
-
-## Prerequisites
-
-- Node.js (16+ recommended)
-- npm (or yarn)
-
-## Frontend — install & run
-
-Open a terminal (zsh):
+1. From this repo root or the `frontend/` folder, install dependencies:
 
 ```bash
 cd frontend
 npm install
+```
+
+2. Start the dev server:
+
+```bash
 npm run dev
 ```
 
-The dev server runs via Vite. The app entry is `frontend/src/main.ts` and the API client is `frontend/src/lib/apiClient.ts`.
+Tests
 
-## Frontend — tests
+- Contract tests (spec-only): these tests validate the contract YAML files
+  and DO NOT make network calls by default. Run from repo root:
 
-Run unit tests for the frontend (vitest):
+```bash
+npx vitest specs/registration-webapp/tests/contracts/*.spec.ts
+```
+
+- Unit tests (runes/apiClient): run with:
 
 ```bash
 cd frontend
 npx vitest
 ```
 
-Tests live in `frontend/test/` and mock network calls using vitest mocks. The tests target the rune modules that manage state and API interactions.
-
-## Contract tests (spec-only)
-
-These tests validate the presence and structure of local contract YAMLs (spec-only; they do not call the backend unless configured).
+- Integration-mode contract tests: to run tests that hit a backend set `BACKEND_BASE` and optionally `AUTH_TOKEN`:
 
 ```bash
-cd specs/registration-webapp
-npm install
-npx vitest
+BACKEND_BASE=http://localhost:8000 AUTH_TOKEN=ey... npx vitest specs/registration-webapp/tests/contracts/*.spec.ts
 ```
 
-Contract YAML files are in `specs/registration-webapp/contracts/`.
+3. Configure backend base URL via Vite env var `VITE_BACKEND_BASE` (e.g.
+   `VITE_BACKEND_BASE=http://localhost:8000 npm run dev`). Auth token is
+   stored in localStorage under `auth_token` and is managed by
+   `src/lib/apiClient.ts`.
 
-## Formatting
+Where code lives
 
-Prettier is used to format frontend files. To run Prettier across the frontend folder:
+- `src/lib/apiClient.ts` — axios wrapper and token management
+- `src/runes/*` — state runes: `accountRune`, `teamRune`, `submissionRune`, `flagsRune`
 
-```bash
-cd /path/to/repo
-npx prettier --write "frontend/**/*.{ts,js,css,html,json,md,scss}"
-```
+Notes
 
-You can pin a specific Prettier version with `npx prettier@2.8.8 --write ...` as used in earlier runs.
-
-## Notes on architecture
-
-- API client: `frontend/src/lib/apiClient.ts` exports an `axios` instance and `setAuthToken` helper. Token storage uses `localStorage` when available and guards for Node test environments.
-- Runes: `frontend/src/runes/*.ts` implement small Svelte stores and network helpers for accounts, teams, submissions, and flags. Tests exercise their exported functions and store side-effects.
-
-## Contributing & next steps
-
-- If you add integration contract tests that call a live backend, add an environment-based toggle (e.g., `BACKEND_BASE`) so spec-only tests remain fast and safe.
-- Consider adding a `.prettierrc` for consistent formatting across contributors.
-
-## Troubleshooting
-
-- If tests fail due to missing types for `js-yaml`, run `npm install --save-dev @types/js-yaml` in the `specs/registration-webapp` package or leave the provided ambient declaration in `specs/registration-webapp/types/js-yaml.d.ts`.
-
----
-
-If you'd like, I can:
-
-- Run the frontend unit tests and fix any failures.
-- Add a `.prettierrc` and an npm script for formatting.
-- Create a small CI job to run unit and contract tests.
+- Debounce should be implemented in UI components before calling the
+  submissionRune save functions (default 800ms recommended).
+- `GET /accounts/flags` requires Authorization header; use `accountRune`
+  to login and set the token before calling `fetchFlags()`.

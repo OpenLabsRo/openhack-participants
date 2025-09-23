@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./tmp/testbuild",
+    "noEmit": false,
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "$lib": ["src/lib"],
+      "$lib/*": ["src/lib/*"]
+    }
+  },
+  "include": [
+    "src/lib/**/*.ts",
+    "src/runes/**/*.ts",
+    "src/types/**/*.ts",
+    "src/__tests__/**/*"
+  ]
+}
