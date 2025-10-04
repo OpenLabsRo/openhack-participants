@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store'
-import { openhackApi } from '../lib/api/openhackApi.js'
-import { teamRune } from './teamRune.js'
-import type { Submission, Team } from '../types/team.js'
+import { openhackApi } from '$api/openhackApi.js'
+import { teamRune } from '$runes/teamRune.js'
+import type { Submission, Team } from '$types/team.js'
 
 /**
  * submissionRune store

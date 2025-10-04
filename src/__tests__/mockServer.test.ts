@@ -9,6 +9,7 @@ import {
   type ApiError,
   type AccountMembersResponse,
   type TeamMembersResponse,
+  type TeamChangeNameRequest,
 } from '../lib/api/openhackApi.js'
 import type { Account } from '../types/account.js'
 import type { Team, Submission } from '../types/team.js'
@@ -22,11 +23,14 @@ import {
   leave,
   kick,
   deleteTeam,
-  renameTeam,
+  changeTeamName,
   loadMembers,
   getTeam,
 } from '../runes/teamRune.js'
-import { submissionRune, updateName as updateSubmissionName } from '../runes/submissionRune.js'
+import {
+  submissionRune,
+  updateName as updateSubmissionName,
+} from '../runes/submissionRune.js'
 import { fetchFlags, flagsRune } from '../runes/flagsRune.js'
 import { get } from 'svelte/store'
 
@@ -49,7 +53,8 @@ interface MockHandlerResult {
 type MockHandler = (input: MockHandlerInput) => MockHandlerResult
 
 function createAxiosError(status: number, data: any) {
-  const message = typeof data?.message === 'string' ? data.message : 'Request failed'
+  const message =
+    typeof data?.message === 'string' ? data.message : 'Request failed'
   const error = new Error(message) as any
   error.isAxiosError = true
   error.response = { status, data }
@@ -80,13 +85,25 @@ function createMockAxios(handlers: Record<string, MockHandler>): AxiosInstance {
       response: { use: () => 0, eject: () => {} },
     },
     get: (url: string, config?: any) => call('get', url, undefined, config),
-    post: (url: string, data?: any, config?: any) => call('post', url, data, config),
-    patch: (url: string, data?: any, config?: any) => call('patch', url, data, config),
-    delete: (url: string, config?: any) => call('delete', url, undefined, config),
-    put: (url: string, data?: any, config?: any) => call('put', url, data, config),
-    request: (config: any) => call((config?.method ?? 'get') as Method, config?.url ?? '', config?.data, config),
-    head: () => Promise.reject(new Error('HEAD not implemented in mock client')),
-    options: () => Promise.reject(new Error('OPTIONS not implemented in mock client')),
+    post: (url: string, data?: any, config?: any) =>
+      call('post', url, data, config),
+    patch: (url: string, data?: any, config?: any) =>
+      call('patch', url, data, config),
+    delete: (url: string, config?: any) =>
+      call('delete', url, undefined, config),
+    put: (url: string, data?: any, config?: any) =>
+      call('put', url, data, config),
+    request: (config: any) =>
+      call(
+        (config?.method ?? 'get') as Method,
+        config?.url ?? '',
+        config?.data,
+        config
+      ),
+    head: () =>
+      Promise.reject(new Error('HEAD not implemented in mock client')),
+    options: () =>
+      Promise.reject(new Error('OPTIONS not implemented in mock client')),
   } as unknown as AxiosInstance
 
   return instance
@@ -123,6 +140,7 @@ const sampleTeam: Team = {
     repo: 'https://example.com/repo',
     pres: 'https://example.com/pres',
   },
+  table: 'A1',
   deleted: false,
 }
 
@@ -135,18 +153,49 @@ const flagsPayload: Flags = {
 async function runHelperTests() {
   const helpers = createApiHelpers(
     createMockAxios({
-      'post /accounts/check': () => ({ status: 200, data: { registered: true } }),
-      'post /accounts/register': () => ({ status: 200, data: { token: 'tkn', account: sampleAccount } }),
-      'post /accounts/login': () => ({ status: 200, data: { token: 'tkn', account: sampleAccountUpdated } }),
-      'get /accounts/whoami': () => ({ status: 200, data: sampleAccountUpdated }),
-      'patch /accounts': () => ({ status: 200, data: { token: 'tkn', account: sampleAccountUpdated } }),
+      'post /accounts/check': () => ({
+        status: 200,
+        data: { registered: true },
+      }),
+      'post /accounts/register': () => ({
+        status: 200,
+        data: { token: 'tkn', account: sampleAccount },
+      }),
+      'post /accounts/login': () => ({
+        status: 200,
+        data: { token: 'tkn', account: sampleAccountUpdated },
+      }),
+      'get /accounts/meta/whoami': () => ({
+        status: 200,
+        data: sampleAccountUpdated,
+      }),
+      'patch /accounts/me': () => ({
+        status: 200,
+        data: { token: 'tkn', account: sampleAccountUpdated },
+      }),
       'get /accounts/flags': () => ({ status: 200, data: flagsPayload }),
       'get /teams': () => ({ status: 200, data: sampleTeam }),
-      'post /teams': () => ({ status: 200, data: { token: 'tkn', account: sampleAccount } }),
-      'patch /teams': () => ({ status: 200, data: { ...sampleTeam, name: 'Renamed Team' } }),
-      'delete /teams': () => ({ status: 200, data: { token: 'tkn', account: sampleAccount } }),
-      'get /teams/members': () => ({ status: 200, data: [sampleAccount, secondaryAccount] }),
-      'patch /teams/join': () => ({
+      'post /teams': () => ({
+        status: 200,
+        data: { token: 'tkn', account: sampleAccount },
+      }),
+      'patch /teams/name': () => ({
+        status: 200,
+        data: { ...sampleTeam, name: 'Renamed Team' },
+      }),
+      'patch /teams/table': () => ({
+        status: 200,
+        data: { ...sampleTeam, table: 'A1' },
+      }),
+      'delete /teams': () => ({
+        status: 200,
+        data: { token: 'tkn', account: sampleAccount },
+      }),
+      'get /teams/members': () => ({
+        status: 200,
+        data: [sampleAccount, secondaryAccount],
+      }),
+      'patch /teams/members/join': () => ({
         status: 200,
         data: {
           token: 'tkn',
@@ -154,7 +203,7 @@ async function runHelperTests() {
           members: [sampleAccount, secondaryAccount],
         } satisfies AccountMembersResponse,
       }),
-      'patch /teams/leave': () => ({
+      'patch /teams/members/leave': () => ({
         status: 200,
         data: {
           token: 'tkn',
@@ -162,23 +211,35 @@ async function runHelperTests() {
           members: [secondaryAccount],
         } satisfies AccountMembersResponse,
       }),
-      'patch /teams/kick': () => ({
+      'patch /teams/members/kick': () => ({
         status: 200,
         data: {
           members: [sampleAccount],
         } satisfies TeamMembersResponse,
       }),
-      'patch /teams/submissions/name': () => ({ status: 200, data: { ...sampleTeam, submission: { ...sampleTeam.submission, name: 'Updated' } } }),
+      'patch /teams/submissions/name': () => ({
+        status: 200,
+        data: {
+          ...sampleTeam,
+          submission: { ...sampleTeam.submission, name: 'Updated' },
+        },
+      }),
     })
   )
 
-  const registered = (await helpers.Accounts.check('user@example.com')) as AccountCheckResponse
+  const registered = await helpers.Accounts.check('user@example.com')
   assert.equal(registered.registered, true)
 
-  const registerRes = await helpers.Accounts.register({ email: 'member@example.com', password: 'secret' })
+  const registerRes = await helpers.Accounts.register({
+    email: 'member@example.com',
+    password: 'secret',
+  })
   assert.equal(registerRes.account.id, sampleAccount.id)
 
-  const loginRes = await helpers.Accounts.login({ email: 'member@example.com', password: 'secret' })
+  const loginRes = await helpers.Accounts.login({
+    email: 'member@example.com',
+    password: 'secret',
+  })
   assert.equal(loginRes.account.name, sampleAccountUpdated.name)
 
   const whoamiRes = await helpers.Accounts.whoami()
@@ -202,8 +263,14 @@ async function runHelperTests() {
   const kickRes = await helpers.Teams.kick('acct_2')
   assert.equal(kickRes.members.length, 1)
 
+  const changeNameRes = await helpers.Teams.changeName({ name: 'New Name' })
+  assert.equal(changeNameRes.name, 'New Name')
+
   const submission = await helpers.Submissions.updateName('Updated')
   assert.equal(submission.submission.name, 'Updated')
+
+  const table = await helpers.Teams.changeTable({ table: 'A1' })
+  assert.equal(team.table, 'A1')
 }
 
 // runHelperNegativeTests confirms that helper failures produce ApiError with expected metadata.
@@ -212,9 +279,11 @@ async function runHelperNegativeTests() {
     createMockAxios({
       'post /accounts/check': () => ({
         status: 404,
-        data: { message: 'account not initialized - talk to the administrator' },
+        data: {
+          message: 'account not initialized - talk to the administrator',
+        },
       }),
-      'patch /teams/join': () => ({
+      'patch /teams/members/join': () => ({
         status: 409,
         data: { message: 'account already has a team' },
       }),
@@ -258,7 +327,8 @@ async function runRuneTests() {
     join: openhackApi.Teams.join,
     leave: openhackApi.Teams.leave,
     kick: openhackApi.Teams.kick,
-    rename: openhackApi.Teams.rename,
+    changeName: openhackApi.Teams.changeName,
+    changeTable: openhackApi.Teams.changeTable,
     remove: openhackApi.Teams.remove,
     flagsFetch: openhackApi.Flags.fetch,
     submissionsUpdate: openhackApi.Submissions.updateName,
@@ -268,7 +338,10 @@ async function runRuneTests() {
 
   openhackApi.Teams.detail = async () => sampleTeam
   openhackApi.Teams.members = async () => [sampleAccount, secondaryAccount]
-  openhackApi.Teams.create = async (name: string) => ({ token: 'tkn', account: sampleAccount })
+  openhackApi.Teams.create = async (name: string) => ({
+    token: 'tkn',
+    account: sampleAccount,
+  })
   openhackApi.Teams.join = async () => ({
     token: 'tkn',
     account: sampleAccount,
@@ -280,8 +353,14 @@ async function runRuneTests() {
     members: [secondaryAccount],
   })
   openhackApi.Teams.kick = async () => ({ members: [sampleAccount] })
-  openhackApi.Teams.rename = async (payload) => ({ ...sampleTeam, name: payload.name })
-  openhackApi.Teams.remove = async () => ({ token: 'tkn', account: { ...sampleAccount, teamID: '' } })
+  openhackApi.Teams.changeName = async (payload) => ({
+    ...sampleTeam,
+    name: payload.name,
+  })
+  openhackApi.Teams.remove = async () => ({
+    token: 'tkn',
+    account: { ...sampleAccount, teamID: '' },
+  })
   openhackApi.Flags.fetch = async () => flagsPayload
   openhackApi.Submissions.updateName = async () => ({
     ...sampleTeam,
@@ -303,10 +382,11 @@ async function runRuneTests() {
     const membersAfterJoin = get(teamMembersRune) as Account[]
     assert.equal(membersAfterJoin.length, 2)
 
-    await renameTeam('Renamed')
-    const renamedTeam = get(teamRune) as Team | null
-    if (!renamedTeam) throw new Error('teamRune not populated after rename')
-    assert.equal(renamedTeam.name, 'Renamed')
+    await changeTeamName('Renamed')
+    const changedTeamName = get(teamRune) as Team | null
+    if (!changedTeamName)
+      throw new Error('teamRune not populated after changeName')
+    assert.equal(changedTeamName.name, 'Renamed')
 
     await loadMembers()
     const reloadedMembers = get(teamMembersRune) as Account[]
@@ -314,7 +394,8 @@ async function runRuneTests() {
 
     await updateSubmissionName('Updated Submission')
     const submissionState = get(submissionRune) as Submission | null
-    if (!submissionState) throw new Error('submissionRune not populated after update')
+    if (!submissionState)
+      throw new Error('submissionRune not populated after update')
     assert.equal(submissionState.name, 'Updated Submission')
 
     await fetchFlags()
@@ -346,7 +427,8 @@ async function runRuneTests() {
     openhackApi.Teams.join = original.join
     openhackApi.Teams.leave = original.leave
     openhackApi.Teams.kick = original.kick
-    openhackApi.Teams.rename = original.rename
+    openhackApi.Teams.changeName = original.changeName
+    openhackApi.Teams.changeTable = original.changeTable
     openhackApi.Teams.remove = original.remove
     openhackApi.Flags.fetch = original.flagsFetch
     openhackApi.Submissions.updateName = original.submissionsUpdate
@@ -382,7 +464,10 @@ async function runRuneNegativeTests() {
 
 const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'API helpers handle positive responses', run: runHelperTests },
-  { name: 'API helpers surface ApiError negatives', run: runHelperNegativeTests },
+  {
+    name: 'API helpers surface ApiError negatives',
+    run: runHelperNegativeTests,
+  },
   { name: 'Runes update stores on happy paths', run: runRuneTests },
   { name: 'Runes propagate ApiError on failure', run: runRuneNegativeTests },
 ]

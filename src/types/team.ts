@@ -11,4 +11,5 @@ export interface Team {
   members: string[]
   submission: Submission
   deleted: boolean
+  table: string
 }

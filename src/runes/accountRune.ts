@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
-import { setAuthToken } from '../lib/apiClient.js'
-import type { Account } from '../types/account.js'
+import { saveToken, removeToken, getToken } from '$lib/auth.js'
+import type { Account } from '$types/account.js'
 import {
   openhackApi,
   type ApiError,
@@ -23,7 +23,7 @@ export const accountRune = writable<Account | null>(null)
  * - Side effects: none (does not update accountRune or auth token)
  * - Error modes: throws if the network call fails
  */
-export { isApiError }
+export { isApiError, getToken, removeToken }
 export type { ApiError }
 
 export async function check(email: string) {
@@ -35,15 +35,16 @@ export async function check(email: string) {
  * - Purpose: Create a new account and sign-in the user.
  * - Input: email, password
  * - Output: the created account object
- * - Side effects: stores auth token (via setAuthToken) and updates `accountRune`
+ * - Side effects: stores auth token (via saveToken) and updates `accountRune`
  * - Error modes: throws if register fails (backend validation, network error)
  */
 export async function register(email: string, password: string) {
-  const { token, account }: AccountTokenResponse = await openhackApi.Accounts.register({
-    email,
-    password,
-  })
-  setAuthToken(token)
+  const { token, account }: AccountTokenResponse =
+    await openhackApi.Accounts.register({
+      email,
+      password,
+    })
+  saveToken(token)
   accountRune.set(account)
   return account
 }
@@ -57,11 +58,12 @@ export async function register(email: string, password: string) {
  * - Error modes: throws on auth failure or network error
  */
 export async function login(email: string, password: string) {
-  const { token, account }: AccountTokenResponse = await openhackApi.Accounts.login({
-    email,
-    password,
-  })
-  setAuthToken(token)
+  const { token, account }: AccountTokenResponse =
+    await openhackApi.Accounts.login({
+      email,
+      password,
+    })
+  saveToken(token)
   accountRune.set(account)
   return account
 }
@@ -83,9 +85,9 @@ export async function whoami() {
 /**
  * logout()
  * - Purpose: Clear local auth state and remove token header.
- * - Side effects: removes stored token via setAuthToken(null) and clears `accountRune`
+ * - Side effects: removes stored token via removeToken() and clears `accountRune`
  */
 export function logout() {
-  setAuthToken(null)
+  removeToken()
   accountRune.set(null)
 }

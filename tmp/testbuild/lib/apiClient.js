@@ -1,0 +1,27 @@
+import createApi from './apiBase.js';
+// create axios instance using resolved base URL from apiBase
+const api = createApi();
+// Simple token storage; runes will call setToken when login/register succeeds
+export function setAuthToken(token) {
+    const hasLocalStorage = typeof globalThis !== 'undefined' &&
+        typeof globalThis.localStorage !== 'undefined';
+    if (token) {
+        if (hasLocalStorage)
+            globalThis.localStorage.setItem('auth_token', token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    else {
+        if (hasLocalStorage)
+            globalThis.localStorage.removeItem('auth_token');
+        delete api.defaults.headers.common['Authorization'];
+    }
+}
+// Initialize token from storage (safe in Node)
+const hasLocalStorage = typeof globalThis !== 'undefined' &&
+    typeof globalThis.localStorage !== 'undefined';
+const stored = hasLocalStorage
+    ? globalThis.localStorage.getItem('auth_token')
+    : null;
+if (stored)
+    setAuthToken(stored);
+export default api;

@@ -1,8 +1,8 @@
 import axios, { type AxiosInstance } from 'axios'
-import api from '../apiClient.js'
-import type { Account } from '../../types/account.js'
-import type { Team } from '../../types/team.js'
-import type { Flags } from '../../types/flags.js'
+import api from './apiClient.js'
+import type { Account } from '$types/account.js'
+import type { Team } from '$types/team.js'
+import type { Flags } from '$types/flags.js'
 
 // Error helpers --------------------------------------------------------------------------------
 
@@ -12,14 +12,20 @@ export interface ApiError extends Error {
 }
 
 export function isApiError(err: unknown): err is ApiError {
-  return typeof err === 'object' && err !== null && 'status' in err && 'message' in err
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'status' in err &&
+    'message' in err
+  )
 }
 
 // toApiError promotes unknown values (Axios errors or otherwise) into ApiError.
 function toApiError(err: unknown): ApiError {
   if (axios.isAxiosError(err) && err.response) {
     const { status, data } = err.response
-    const message = typeof data?.message === 'string' ? data.message : err.message
+    const message =
+      typeof data?.message === 'string' ? data.message : err.message
     return { name: 'ApiError', status, message }
   }
 
@@ -59,8 +65,12 @@ export interface AccountCheckRequest {
   email: string
 }
 
-export interface TeamRenameRequest {
+export interface TeamChangeNameRequest {
   name: string
+}
+
+export interface TeamChangeTableRequest {
+  table: string
 }
 
 export interface SubmissionPayload {
@@ -70,24 +80,39 @@ export interface SubmissionPayload {
   pres?: string
 }
 
+export interface AccountCheckResponse {
+  registered: boolean
+}
+
 // createApiHelpers wires domain-specific helpers onto a shared axios instance so runes/tests
 // can consume a consistent, typed surface area.
 export function createApiHelpers(apiClient: AxiosInstance = api) {
   const Accounts = {
     // check verifies onboarding status for an email.
     check: (email: string) =>
-      request(() => apiClient.post('/accounts/check', { email } satisfies AccountCheckRequest)),
+      request<AccountCheckResponse>(() =>
+        apiClient.post('/accounts/auth/check', {
+          email,
+        } satisfies AccountCheckRequest)
+      ),
     // register issues a token and profile for new accounts.
     register: (payload: CredentialRequest) =>
-      request<AccountTokenResponse>(() => apiClient.post('/accounts/register', payload)),
+      request<AccountTokenResponse>(() =>
+        apiClient.post('/accounts/auth/register', payload)
+      ),
     // login authenticates via credentials.
     login: (payload: CredentialRequest) =>
-      request<AccountTokenResponse>(() => apiClient.post('/accounts/login', payload)),
+      request<AccountTokenResponse>(() =>
+        apiClient.post('/accounts/auth/login', payload)
+      ),
     // whoami resolves the current account from the auth token.
-    whoami: () => request<Account>(() => apiClient.get('/accounts/whoami')),
+    whoami: () =>
+      request<Account>(() => apiClient.get('/accounts/meta/whoami')),
     // editName updates the display name and returns a refreshed token payload.
     editName: (name: string) =>
-      request<AccountTokenResponse>(() => apiClient.patch('/accounts', { name })),
+      request<AccountTokenResponse>(() =>
+        apiClient.patch('/accounts/me', { name })
+      ),
     // flags retrieves participant feature flags.
     flags: () => request<Flags>(() => apiClient.get('/accounts/flags')),
   }
@@ -98,24 +123,31 @@ export function createApiHelpers(apiClient: AxiosInstance = api) {
     // create provisions a team and returns token/account for the creator.
     create: (name: string) =>
       request<AccountTokenResponse>(() => apiClient.post('/teams', { name })),
-    // rename mutates the team name.
-    rename: (payload: TeamRenameRequest) =>
-      request<Team>(() => apiClient.patch('/teams', payload)),
+    // changeName mutates the team name.
+    changeName: (payload: TeamChangeNameRequest) =>
+      request<Team>(() => apiClient.patch('/teams/name', payload)),
+    // updateTable mutates the team table.
+    changeTable: (payload: TeamChangeTableRequest) =>
+      request<Team>(() => apiClient.patch('/teams/table', payload)),
     // remove deletes the team (single-member constraint) and refreshes auth state.
-    remove: () => request<AccountTokenResponse>(() => apiClient.delete('/teams')),
+    remove: () =>
+      request<AccountTokenResponse>(() => apiClient.delete('/teams')),
     // members lists the hydrated roster for the team.
     members: () => request<Account[]>(() => apiClient.get('/teams/members')),
     // join enrolls the caller into the specified team and returns token/account/members.
     join: (id: string) =>
       request<AccountMembersResponse>(() =>
-        apiClient.patch('/teams/join', undefined, { params: { id } })
+        apiClient.patch('/teams/members/join', undefined, { params: { id } })
       ),
     // leave removes the caller and returns the remaining roster.
-    leave: () => request<AccountMembersResponse>(() => apiClient.patch('/teams/leave')),
+    leave: () =>
+      request<AccountMembersResponse>(() =>
+        apiClient.patch('/teams/members/leave')
+      ),
     // kick expels the given account ID and returns the updated roster.
     kick: (id: string) =>
       request<TeamMembersResponse>(() =>
-        apiClient.patch('/teams/kick', undefined, { params: { id } })
+        apiClient.patch('/teams/members/kick', undefined, { params: { id } })
       ),
   }
 
@@ -136,7 +168,12 @@ export function createApiHelpers(apiClient: AxiosInstance = api) {
     fetch: () => request<Flags>(() => apiClient.get('/accounts/flags')),
   }
 
-  return { Accounts, Teams, Submissions, Flags }
+  const General = {
+    // ping checks if the API is alive.
+    ping: () => request<string>(() => apiClient.get('/meta/ping')),
+  }
+
+  return { Accounts, Teams, Submissions, Flags, General }
 }
 
 export const openhackApi = createApiHelpers()

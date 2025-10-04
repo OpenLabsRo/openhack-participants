@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
-import type { Flags } from '../types/flags.js'
-import { openhackApi } from '../lib/api/openhackApi.js'
+import type { Flags } from '$types/flags.js'
+import { openhackApi } from '$api/openhackApi.js'
 
 /**
  * flagsRune store

@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store'
-import { setAuthToken } from '../lib/apiClient.js'
-import type { Team } from '../types/team.js'
-import type { Account } from '../types/account.js'
+import { saveToken } from '$lib/auth.js'
+import type { Team } from '$types/team.js'
+import type { Account } from '$types/account.js'
 import {
   openhackApi,
   type AccountTokenResponse,
@@ -14,7 +14,7 @@ export const teamRune = writable<Team | null>(null)
 export const teamMembersRune = writable<Account[]>([])
 
 async function refreshAuth({ token, account }: AccountTokenResponse) {
-  setAuthToken(token)
+  saveToken(token)
   accountRune.set(account)
 }
 
@@ -42,8 +42,8 @@ export async function createTeam(name: string) {
   return team
 }
 
-export async function renameTeam(name: string) {
-  const team = await openhackApi.Teams.rename({ name })
+export async function changeTeamName(name: string) {
+  const team = await openhackApi.Teams.changeName({ name })
   teamRune.set(team)
   return team
 }
@@ -72,7 +72,8 @@ export async function leave() {
 }
 
 export async function kick(accountId: string) {
-  const { members }: TeamMembersResponse = await openhackApi.Teams.kick(accountId)
+  const { members }: TeamMembersResponse =
+    await openhackApi.Teams.kick(accountId)
   applyMembers(members)
   return getTeam()
 }
