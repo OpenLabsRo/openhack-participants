@@ -77,7 +77,7 @@
     </Button>
 
     <p>
-      By continuing, you agree to our
+      By clicking "Continue", you agree to our
       <a href="https://tos.openhack.ro" target="_blank" rel="noopener noreferrer">Terms of Service</a>
       and
       <a href="https://privacy.openhack.ro" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.

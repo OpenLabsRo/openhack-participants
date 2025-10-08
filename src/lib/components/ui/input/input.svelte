@@ -23,9 +23,15 @@
 	input {
 		font-family: "Inter";
 		height: 40px;
-		padding-left: 20px;
+		padding-left: 15px;
 		box-sizing: border-box;
+		font-size: 16px;
 		color: var(--foreground);
+	}
+
+	input::placeholder {
+		font-weight: 400;
+		color: #f8fafc;
 	}
 </style>
 

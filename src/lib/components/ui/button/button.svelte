@@ -58,10 +58,12 @@
 <style>
 	button, a {
 		font-family: "Inter";
+		font-size: 15px;
 	}
 
 	button {
 		height: 40px;
+		background: #fff;
 	}
 </style>
 

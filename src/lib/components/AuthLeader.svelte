@@ -12,12 +12,17 @@
   }
   p {
     color: #d4d4d4;
+    font-size: 16px;
   }
 
   h1, p {
     line-height: 36px;
     margin: 0;
     border: 0;
+  }
+
+  h1 {
+    font-size: 30px;
   }
 
 </style>
