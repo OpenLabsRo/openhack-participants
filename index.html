@@ -3,8 +3,37 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/img/logo-200.png" />
+
     <title>OpenHack Participants</title>
-    <link rel="icon" type="image/png" href="/img/logo.png" />
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- iOS extra -->
+    <meta name="apple-mobile-web-app-status-bar" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <link rel="apple-touch-icon" href="/icons/icon-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120.png" />
+    <link
+      rel="apple-touch-icon"
+      sizes="1024x1024"
+      href="/icons/icon-1024.png"
+    />
+    <script>
+      if (
+        'serviceWorker' in navigator &&
+        (window.location.protocol === 'https:' ||
+          window.location.hostname === 'localhost')
+      ) {
+        navigator.serviceWorker.register('/sw.js')
+      }
+    </script>
+
     <style>
       @font-face {
         font-family: 'Inter';
