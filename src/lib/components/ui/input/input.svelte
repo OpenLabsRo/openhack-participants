@@ -19,6 +19,16 @@
 	}: Props = $props();
 </script>
 
+<style>
+	input {
+		font-family: "Inter";
+		height: 40px;
+		padding-left: 20px;
+		box-sizing: border-box;
+		color: var(--foreground);
+	}
+</style>
+
 {#if type === "file"}
 	<input
 		bind:this={ref}

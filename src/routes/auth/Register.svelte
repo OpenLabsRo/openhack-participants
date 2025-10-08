@@ -2,8 +2,13 @@
   import { authEmail } from '$runes/authRune';
   import { register } from '$runes/accountRune';
   import { navigate } from 'svelte5-router';
-  import { errorMessage, setError, clearError } from '$runes/errorRune';
+  import { errorMessage, setErrorMessage, setError, clearError } from '$runes/errorRune';
   import AuthLeader from '$lib/components/AuthLeader.svelte';
+  import { Input } from "$components/ui/input";
+  import Button from '$lib/components/ui/button/button.svelte'
+  import { Alert } from '$lib/components/ui/alert'
+  import { CircleAlertIcon } from '@lucide/svelte'
+  import AlertDescription from '$lib/components/ui/alert/alert-description.svelte'
 
   let password = '';
   let confirmPassword = '';
@@ -13,7 +18,7 @@
     clearError();
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
@@ -26,21 +31,67 @@
   }
 </script>
 
-<AuthLeader title="Create Your Account" subtitle="Complete your registration by setting a password." />
+<style>
+  main {
+    max-width: 384px;
+    margin: 0 auto;
+    margin-top: 30vh;
+  }
 
-{#if $errorMessage}
-  <div style="color: red; margin-bottom: 1em;">{$errorMessage}</div>
-{/if}
+  .spacer {
+    height: 10px;
+  }
+</style>
 
-<form on:submit={handleSubmit}>
-  <label for="email">Email</label>
-  <input id="email" type="email" bind:value={$authEmail} on:input={clearError} />
+<main>
+  <AuthLeader
+    title="Create a password"
+    subtitle="Enter a strong password below to finish creating your account"
+  />
 
-  <label for="password">Password</label>
-  <input id="password" type="password" bind:value={password} on:input={clearError} />
+  <form on:submit={handleSubmit}>
+    <br>
+    <Input
+      id="email"
+      type="email"
+      bind:value={$authEmail}
+      placeholder="example@openhack.ro"
+      disabled
+    />
+    <div class="spacer"></div>
+    <Input
+      id="password"
+      type="password"
+      bind:value={password}
+      placeholder="Your password"
+      autofocus
+    />
+    <div class="spacer"></div>
+    <Input
+      id="confirm-password"
+      type="password"
+      bind:value={confirmPassword}
+      placeholder="Confirm password"
+    />
+    <br>
+    <Button
+      type="submit"
+      class="w-full"
+    >
+      Login
+    </Button>
 
-  <label for="confirm-password">Confirm Password</label>
-  <input id="confirm-password" type="password" bind:value={confirmPassword} on:input={clearError} />
+  </form>
 
-  <button type="submit">Register</button>
-</form>
+  <br>
+  
+  {#if $errorMessage}
+    <Alert variant="destructive" size="default">
+      <CircleAlertIcon />
+      <AlertDescription class="justify-self-start text-left">
+        {$errorMessage}
+      </AlertDescription>
+    </Alert>
+  {/if}
+
+</main>

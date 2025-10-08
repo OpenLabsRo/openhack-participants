@@ -23,9 +23,10 @@
         await openhackApi.General.ping()
 
         const token = getToken()
-        const isAuthPage = url.startsWith('/auth/')
+        const isAuthPage = url.startsWith('/auth/check')
 
         if (token) {
+          navigate('/')
           // If a token exists, try to fetch the user's account data to restore the session
           try {
             await whoami()

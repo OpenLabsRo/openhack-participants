@@ -32,6 +32,10 @@ export function setError(error: unknown) {
   errorMessage.set(prettifyErrorMessage(message))
 }
 
+export function setErrorMessage(message: string) {
+  errorMessage.set(prettifyErrorMessage(message))
+}
+
 /**
  * Clears the global error message.
  */
