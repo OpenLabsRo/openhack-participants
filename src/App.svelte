@@ -15,6 +15,7 @@
   export let url = ''
 
   let isLoading = true
+  let pingFailed = false
 
   onMount(async () => {
     const sessionCheck = async () => {
@@ -44,6 +45,9 @@
         }
       } catch (error) {
         console.error('API Ping failed:', error)
+        pingFailed = true
+        navigate('/404')
+        return
       }
     }
 
@@ -59,6 +63,8 @@
 
 {#if isLoading}
   <Loading />
+{:else if pingFailed}
+  <NotFound />
 {:else}
   <Router {url}>
     <Route path="/">

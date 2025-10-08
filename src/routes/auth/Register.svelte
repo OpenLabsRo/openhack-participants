@@ -9,6 +9,7 @@
   import { Alert } from '$lib/components/ui/alert'
   import { CircleAlertIcon } from '@lucide/svelte'
   import AlertDescription from '$lib/components/ui/alert/alert-description.svelte'
+  import AuthContainer from '$components/AuthContainer.svelte'
 
   let password = '';
   let confirmPassword = '';
@@ -32,18 +33,12 @@
 </script>
 
 <style>
-  main {
-    max-width: 384px;
-    margin: 0 auto;
-    margin-top: 30vh;
-  }
-
   .spacer {
     height: 10px;
   }
 </style>
 
-<main>
+<AuthContainer>
   <AuthLeader
     title="Create a password"
     subtitle="Enter a strong password below to finish creating your account"
@@ -73,25 +68,28 @@
       bind:value={confirmPassword}
       placeholder="Confirm password"
     />
-    <br>
+    <div class="spacer"></div> 
     <Button
       type="submit"
       class="w-full"
     >
-      Login
+      Register
     </Button>
+    <div class="spacer"></div>
+    <div class="spacer"></div>
+    {#if $errorMessage}
+      <Alert variant="destructive" size="default">
+        <CircleAlertIcon />
+        <AlertDescription class="justify-self-start text-left">
+          {$errorMessage}
+        </AlertDescription>
+      </Alert>
+    {/if}
 
   </form>
 
   <br>
   
-  {#if $errorMessage}
-    <Alert variant="destructive" size="default">
-      <CircleAlertIcon />
-      <AlertDescription class="justify-self-start text-left">
-        {$errorMessage}
-      </AlertDescription>
-    </Alert>
-  {/if}
 
-</main>
+
+</AuthContainer>

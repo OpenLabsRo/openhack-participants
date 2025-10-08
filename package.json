@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "API_DEPLOYMENT=dev vite",
+    "dev:host": "API_DEPLOYMENT=dev vite --host",
     "build": "API_DEPLOYMENT=prod vite build",
     "preview": "API_DEPLOYMENT=prod vite preview",
     "test:mock": "rm -rf tmp/testbuild && tsc -p tsconfig.tests.json && node tmp/testbuild/__tests__/mockServer.test.js"

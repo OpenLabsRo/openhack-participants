@@ -2,8 +2,8 @@
 
 <style>
   .logo {
-    width: 150px; /* Or any size you prefer */
-    height: 150px;
+    width: var(--logo-animation-size); /* Or any size you prefer */
+    height: var(--logo-animation-size); /* Or any size you prefer */
     mask-image: linear-gradient(
       -75deg,
       rgba(0, 0, 0, 0.4) 30%,

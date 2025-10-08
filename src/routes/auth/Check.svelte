@@ -5,10 +5,11 @@
   import { errorMessage, setError, clearError } from '$runes/errorRune'
   import AuthLeader from '$components/AuthLeader.svelte'
   import { Input } from "$components/ui/input";
-  import Button from '$lib/components/ui/button/button.svelte'
-  import {Alert} from '$lib/components/ui/alert'
+  import Button from '$components/ui/button/button.svelte'
+  import {Alert} from '$components/ui/alert'
   import { CircleAlertIcon } from '@lucide/svelte'
-  import AlertDescription from '$lib/components/ui/alert/alert-description.svelte'
+  import AlertDescription from '$components/ui/alert/alert-description.svelte'
+  import AuthContainer from '$components/AuthContainer.svelte'
 
   $: $authEmail && clearError();
 
@@ -29,12 +30,6 @@
 </script>
 
 <style>
-  main {
-    max-width: 384px;
-    margin: 0 auto;
-    margin-top: 30vh;
-  }
-
   p {
     color: var(--secondary-text);
     text-align: center;
@@ -44,9 +39,13 @@
     color: var(--secondary-text);
     text-decoration: underline;
   }
+
+  .spacer {
+    height: 20px;
+  }
 </style>
 
-<main>
+<AuthContainer>
   <AuthLeader
     title="OpenHack Registration"
     subtitle="Enter your email below to continue"
@@ -61,13 +60,22 @@
       placeholder="example@openhack.ro"
       autofocus
     />
-    <br>
+    <div class="spacer"></div> 
+    {#if $errorMessage}
+      <Alert variant="destructive" size="default">
+        <CircleAlertIcon />
+        <AlertDescription>{$errorMessage}</AlertDescription>
+        <!-- <AlertDescription>Account not initialized - talk to the administrator</AlertDescription> -->
+      </Alert>
+      <div class="spacer"></div> 
+    {/if}
     <Button
       type="submit"
       class="w-full"
     >
       Continue
     </Button>
+
     <p>
       By continuing, you agree to our
       <a href="https://tos.openhack.ro" target="_blank" rel="noopener noreferrer">Terms of Service</a>
@@ -77,12 +85,5 @@
 
   </form>
   
-  {#if $errorMessage}
-    <Alert variant="destructive" size="default">
-      <CircleAlertIcon />
-      <AlertDescription>{$errorMessage}</AlertDescription>
-      <!-- <AlertDescription>Account not initialized - talk to the administrator</AlertDescription> -->
-    </Alert>
-  {/if}
-
-</main>
+ 
+</AuthContainer>

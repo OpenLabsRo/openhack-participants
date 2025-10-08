@@ -7,7 +7,7 @@
 			variant: {
 				default: "bg-card text-card-foreground text-left",
 				destructive:
-					"text-destructive bg-card *:data-[slot=alert-description]:text-destructive/90 [&>svg]:text-current",
+					"text-destructive bg-card text-left *:data-[slot=alert-description]:text-destructive/90 [&>svg]:text-current",
 			},
 			size: {
 				default: "px-4 py-3",
@@ -44,9 +44,10 @@
 
 <style>
 	div {
-		padding: 5px;
+		padding: 12px;
 		padding-left: 10px;
 		box-sizing: border-box;
+		text-align: left;
 	}
 </style>
 
