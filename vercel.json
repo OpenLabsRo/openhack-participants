@@ -1,31 +1,10 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "headers": [
-    {
-      "source": "/sw.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/manifest.webmanifest",
-      "headers": [
-        { "key": "Content-Type", "value": "application/manifest+json" }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(favicon.ico|manifest.webmanifest|robots.txt)",
-      "destination": "/$1"
-    },
-    { "source": "/(sw.js|workbox-.*\\.js)", "destination": "/$1" },
-    { "source": "/icons/(.*)", "destination": "/icons/$1" },
-    { "source": "/assets/(.*)", "destination": "/assets/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(favicon.ico|manifest.webmanifest|robots.txt)", "dest": "/$1" },
+    { "src": "/(sw\\.js|workbox-.*\\.js)", "dest": "/$1" },
+    { "src": "/(assets|icons|images|fonts)/(.*)", "dest": "/$1/$2" },
+
+    { "src": "/.*", "dest": "/index.html" }
   ]
 }
