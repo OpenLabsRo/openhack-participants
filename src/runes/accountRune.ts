@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { derived, writable, get } from 'svelte/store'
 import { saveToken, removeToken, getToken } from '$lib/auth.js'
 import type { Account } from '$types/account.js'
 import {
@@ -7,6 +7,11 @@ import {
   isApiError,
   type AccountTokenResponse,
 } from '../lib/api/openhackApi.js'
+import { withMinDuration } from '$lib/stores/withMinDuration.js'
+import {
+  DEFAULT_MIN_DURATION,
+  waitMinimumDuration,
+} from '$lib/utils/minDuration.js'
 
 /**
  * accountRune store
@@ -14,6 +19,44 @@ import {
  * - updated by `register`, `login`, and `whoami`
  */
 export const accountRune = writable<Account | null>(null)
+
+const accountLoadingCounter = writable(0)
+export const accountLoadingPending = derived(
+  accountLoadingCounter,
+  (pending) => pending > 0
+)
+export const accountLoading = withMinDuration(accountLoadingPending)
+
+const MIN_LOADING_DURATION = DEFAULT_MIN_DURATION
+
+function beginAccountLoading() {
+  const pending = get(accountLoadingCounter)
+  accountLoadingCounter.set(pending + 1)
+  return pending === 0
+}
+
+function endAccountLoading() {
+  accountLoadingCounter.update((pending) => (pending > 0 ? pending - 1 : 0))
+}
+
+async function withAccountLoading<T>(task: () => Promise<T>): Promise<T> {
+  const isRoot = beginAccountLoading()
+  const startedAt = isRoot ? Date.now() : 0
+  try {
+    const result = await task()
+    if (isRoot) {
+      await waitMinimumDuration(startedAt, MIN_LOADING_DURATION)
+    }
+    return result
+  } catch (error) {
+    if (isRoot) {
+      await waitMinimumDuration(startedAt, MIN_LOADING_DURATION)
+    }
+    throw error
+  } finally {
+    endAccountLoading()
+  }
+}
 
 /**
  * check(email)
@@ -27,7 +70,7 @@ export { isApiError, getToken, removeToken }
 export type { ApiError }
 
 export async function check(email: string) {
-  return openhackApi.Accounts.check(email)
+  return withAccountLoading(() => openhackApi.Accounts.check(email))
 }
 
 /**
@@ -39,14 +82,16 @@ export async function check(email: string) {
  * - Error modes: throws if register fails (backend validation, network error)
  */
 export async function register(email: string, password: string) {
-  const { token, account }: AccountTokenResponse =
-    await openhackApi.Accounts.register({
-      email,
-      password,
-    })
-  saveToken(token)
-  accountRune.set(account)
-  return account
+  return withAccountLoading(async () => {
+    const { token, account }: AccountTokenResponse =
+      await openhackApi.Accounts.register({
+        email,
+        password,
+      })
+    saveToken(token)
+    accountRune.set(account)
+    return account
+  })
 }
 
 /**
@@ -58,14 +103,16 @@ export async function register(email: string, password: string) {
  * - Error modes: throws on auth failure or network error
  */
 export async function login(email: string, password: string) {
-  const { token, account }: AccountTokenResponse =
-    await openhackApi.Accounts.login({
-      email,
-      password,
-    })
-  saveToken(token)
-  accountRune.set(account)
-  return account
+  return withAccountLoading(async () => {
+    const { token, account }: AccountTokenResponse =
+      await openhackApi.Accounts.login({
+        email,
+        password,
+      })
+    saveToken(token)
+    accountRune.set(account)
+    return account
+  })
 }
 
 /**
@@ -77,9 +124,11 @@ export async function login(email: string, password: string) {
  * - Error modes: throws if the token is invalid or network fails
  */
 export async function whoami() {
-  const account = await openhackApi.Accounts.whoami()
-  accountRune.set(account)
-  return account
+  return withAccountLoading(async () => {
+    const account = await openhackApi.Accounts.whoami()
+    accountRune.set(account)
+    return account
+  })
 }
 
 /**

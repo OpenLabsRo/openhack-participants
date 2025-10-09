@@ -26,6 +26,7 @@ export default defineConfig(({ command }) => {
         $routes: path.resolve('./src/routes'),
         $api: path.resolve('./src/lib/api'),
         $types: path.resolve('./src/types'),
+        $img: path.resolve('./img'),
       },
     },
     css: {

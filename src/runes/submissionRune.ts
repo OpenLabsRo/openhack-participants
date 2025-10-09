@@ -1,7 +1,12 @@
-import { writable } from 'svelte/store'
+import { derived, writable, get } from 'svelte/store'
 import { openhackApi } from '$api/openhackApi.js'
 import { teamRune } from '$runes/teamRune.js'
 import type { Submission, Team } from '$types/team.js'
+import { withMinDuration } from '$lib/stores/withMinDuration.js'
+import {
+  DEFAULT_MIN_DURATION,
+  waitMinimumDuration,
+} from '$lib/utils/minDuration.js'
 
 /**
  * submissionRune store
@@ -9,6 +14,43 @@ import type { Submission, Team } from '$types/team.js'
  * - updated indirectly by the update*() functions which write to the backend
  */
 export const submissionRune = writable<Submission | null>(null)
+const submissionLoadingCounter = writable(0)
+export const submissionLoadingPending = derived(
+  submissionLoadingCounter,
+  (pending) => pending > 0
+)
+export const submissionLoading = withMinDuration(submissionLoadingPending)
+
+const MIN_LOADING_DURATION = DEFAULT_MIN_DURATION
+
+function beginSubmissionLoading() {
+  const pending = get(submissionLoadingCounter)
+  submissionLoadingCounter.set(pending + 1)
+  return pending === 0
+}
+
+function endSubmissionLoading() {
+  submissionLoadingCounter.update((pending) => (pending > 0 ? pending - 1 : 0))
+}
+
+async function withSubmissionLoading<T>(task: () => Promise<T>): Promise<T> {
+  const isRoot = beginSubmissionLoading()
+  const startedAt = isRoot ? Date.now() : 0
+  try {
+    const result = await task()
+    if (isRoot) {
+      await waitMinimumDuration(startedAt, MIN_LOADING_DURATION)
+    }
+    return result
+  } catch (error) {
+    if (isRoot) {
+      await waitMinimumDuration(startedAt, MIN_LOADING_DURATION)
+    }
+    throw error
+  } finally {
+    endSubmissionLoading()
+  }
+}
 
 // NOTE: Debounce belongs in the UI. These functions perform the network
 // call and update the teamRune on success. UI components should debounce
@@ -21,9 +63,11 @@ export const submissionRune = writable<Submission | null>(null)
  * - Side effects: calls `refreshTeamSubmission()` which updates `teamRune`
  */
 export async function updateName(name: string) {
-  const team = await openhackApi.Submissions.updateName(name)
-  updateStores(team)
-  return team
+  return withSubmissionLoading(async () => {
+    const team = await openhackApi.Submissions.updateName(name)
+    updateStores(team)
+    return team
+  })
 }
 
 /**
@@ -34,9 +78,11 @@ export async function updateName(name: string) {
  * - Side effects: refreshes team/submission state
  */
 export async function updateDesc(desc: string) {
-  const team = await openhackApi.Submissions.updateDesc(desc)
-  updateStores(team)
-  return team
+  return withSubmissionLoading(async () => {
+    const team = await openhackApi.Submissions.updateDesc(desc)
+    updateStores(team)
+    return team
+  })
 }
 
 /**
@@ -44,9 +90,11 @@ export async function updateDesc(desc: string) {
  * - Purpose: Update the repository URL for the submission.
  */
 export async function updateRepo(repo: string) {
-  const team = await openhackApi.Submissions.updateRepo(repo)
-  updateStores(team)
-  return team
+  return withSubmissionLoading(async () => {
+    const team = await openhackApi.Submissions.updateRepo(repo)
+    updateStores(team)
+    return team
+  })
 }
 
 /**
@@ -54,9 +102,11 @@ export async function updateRepo(repo: string) {
  * - Purpose: Update the presentation URL/identifier for the submission.
  */
 export async function updatePres(pres: string) {
-  const team = await openhackApi.Submissions.updatePres(pres)
-  updateStores(team)
-  return team
+  return withSubmissionLoading(async () => {
+    const team = await openhackApi.Submissions.updatePres(pres)
+    updateStores(team)
+    return team
+  })
 }
 
 /**

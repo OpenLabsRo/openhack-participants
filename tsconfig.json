@@ -21,7 +21,9 @@
       "$api": ["src/lib/api"],
       "$api/*": ["src/lib/api/*"],
       "$types": ["src/types"],
-      "$types/*": ["src/types/*"]
+      "$types/*": ["src/types/*"],
+      "$img": ["img"],
+      "$img/*": ["src/types/*"]
     }
   },
   "include": ["src"]

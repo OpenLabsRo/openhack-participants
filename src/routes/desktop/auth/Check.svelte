@@ -1,17 +1,20 @@
 <script lang="ts">
   import { authEmail } from '$runes/authRune'
-  import { check } from '$runes/accountRune'
+  import { accountLoading, check } from '$runes/accountRune'
   import { navigate } from 'svelte5-router'
   import { errorMessage, setError, clearError } from '$runes/errorRune'
-  import AuthLeader from '$components/AuthLeader.svelte'
+  import AuthLeader from '$components/desktop/AuthLeader.svelte'
   import { Input } from "$components/ui/input";
   import Button from '$components/ui/button/button.svelte'
   import {Alert} from '$components/ui/alert'
   import { CircleAlertIcon } from '@lucide/svelte'
   import AlertDescription from '$components/ui/alert/alert-description.svelte'
-  import AuthContainer from '$components/AuthContainer.svelte'
+  import AuthContainer from '$lib/components/desktop/AuthContainer.svelte'
+  import LoadingIndicator from '$lib/components/shared/LoadingIndicator.svelte'
 
   $: $authEmail && clearError();
+
+  let loading = false
 
   async function handleSubmit(event: Event) {
     event.preventDefault()
@@ -43,6 +46,7 @@
   .spacer {
     height: 20px;
   }
+
 </style>
 
 <AuthContainer>
@@ -72,8 +76,14 @@
     <Button
       type="submit"
       class="w-full"
+      aria-busy={$accountLoading}
+      disabled={$accountLoading}
     >
-      Continue
+      {#if $accountLoading} 
+        <LoadingIndicator size={28} duration={0.5} />
+      {:else}
+        Continue
+      {/if}
     </Button>
 
     <p>

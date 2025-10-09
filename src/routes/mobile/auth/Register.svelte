@@ -1,24 +1,32 @@
 <script lang="ts">
   import { authEmail } from '$runes/authRune';
-  import { login } from '$runes/accountRune';
+  import { accountLoading, register } from '$runes/accountRune';
   import { navigate } from 'svelte5-router';
-  import { errorMessage, setError, clearError } from '$runes/errorRune';
-  import AuthLeader from '$lib/components/AuthLeader.svelte';
+  import { errorMessage, setErrorMessage, setError, clearError } from '$runes/errorRune';
+  import AuthLeader from '$lib/components/desktop/AuthLeader.svelte';
   import { Input } from "$components/ui/input";
   import Button from '$lib/components/ui/button/button.svelte'
   import { Alert } from '$lib/components/ui/alert'
   import { CircleAlertIcon } from '@lucide/svelte'
   import AlertDescription from '$lib/components/ui/alert/alert-description.svelte'
-  import AuthContainer from '$components/AuthContainer.svelte'
+  import AuthContainer from '$lib/components/desktop/AuthContainer.svelte'
+  import LoadingIndicator from '$lib/components/shared/LoadingIndicator.svelte'
 
   let password = '';
+  let confirmPassword = '';
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
     clearError();
+
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      return;
+    }
+
     try {
-      await login($authEmail, password);
-      navigate('/'); // Redirect to homepage on successful login
+      await register($authEmail, password);
+      navigate('/'); // Redirect to homepage on successful registration
     } catch (error) {
       setError(error);
     }
@@ -33,8 +41,8 @@
 
 <AuthContainer>
   <AuthLeader
-    title="Welcome Back!"
-    subtitle="Enter your password below to login"
+    title="Create a password"
+    subtitle="Enter a strong password below to finish creating your account"
   />
 
   <form on:submit={handleSubmit}>
@@ -54,13 +62,25 @@
       placeholder="Your password"
       autofocus
     />
+    <div class="spacer"></div>
+    <Input
+      id="confirm-password"
+      type="password"
+      bind:value={confirmPassword}
+      placeholder="Confirm password"
+    />
     <div class="spacer"></div> 
-    
     <Button
       type="submit"
       class="w-full"
+      aria-busy={$accountLoading}
+      disabled={$accountLoading}
     >
-      Login
+      {#if $accountLoading} 
+        <LoadingIndicator size={28} duration={0.5} />
+      {:else}
+        Register
+      {/if}
     </Button>
     <div class="spacer"></div>
     <div class="spacer"></div>
@@ -74,4 +94,9 @@
     {/if}
 
   </form>
+
+  <br>
+  
+
+
 </AuthContainer>

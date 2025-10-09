@@ -1,5 +1,5 @@
 <script lang="ts">
-  import logoUrl from '../../../img/logo.svg'
+  import logoUrl from '$img/logo.svg'
 
   export let title: string
   export let subtitle: string

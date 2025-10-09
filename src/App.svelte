@@ -5,19 +5,41 @@
   import { openhackApi } from '$lib/api/openhackApi'
   import { getToken, whoami, removeToken } from '$runes/accountRune'
   import { navigate } from 'svelte5-router'
-  import Index from '$routes/index.svelte'
-  import Check from '$routes/auth/Check.svelte'
-  import Register from '$routes/auth/Register.svelte'
-  import Login from '$routes/auth/Login.svelte'
-  import NotFound from '$routes/NotFound.svelte'
-  import Loading from '$lib/components/Loading.svelte'
+  // desktop routes
+  import DesktopIndex from '$routes/desktop/auth/index.svelte'
+  import DesktopCheck from '$routes/desktop/auth/Check.svelte'
+  import DesktopRegister from '$routes/desktop/auth/Register.svelte'
+  import DesktopLogin from '$routes/desktop/auth/Login.svelte'
+  import DesktopNotFound from '$routes/desktop/auth/NotFound.svelte'
+
+  // mobile routes
+  import MobileIndex from '$routes/mobile/auth/index.svelte'
+  import MobileCheck from '$routes/mobile/auth/Check.svelte'
+  import MobileRegister from '$routes/mobile/auth/Register.svelte'
+  import MobileLogin from '$routes/mobile/auth/Login.svelte'
+  import MobileNotFound from '$routes/mobile/auth/NotFound.svelte'
+
+  // shared components
+  import Loading from '$lib/components/shared/Loading.svelte'
 
   export let url = ''
 
+  function checkDesktop(): boolean {
+    if (typeof window === 'undefined') return true; // assume desktop during SSR
+
+    const mqWidth   = window.matchMedia('(min-width: 768px)').matches;
+    const mqHover   = window.matchMedia('(hover: hover)').matches;
+    const mqPointer = window.matchMedia('(pointer: fine)').matches;
+
+    return mqWidth && (mqHover || mqPointer);
+  }
+
   let isLoading = true
   let pingFailed = false
+  let isDesktop = true
 
   onMount(async () => {
+    isDesktop = checkDesktop()
     const sessionCheck = async () => {
       try {
         // Ping the API to check for connectivity and CORS
@@ -53,34 +75,57 @@
 
     const minimumWait = new Promise((resolve) => setTimeout(resolve, 700))
 
+
     try {
       await Promise.all([sessionCheck(), minimumWait])
     } finally {
       isLoading = false
     }
+
+
   })
 </script>
 
 {#if isLoading}
   <Loading />
-{:else if pingFailed}
-  <NotFound />
+{:else if pingFailed && isDesktop}
+  <DesktopNotFound />
+{:else if pingFailed && !isDesktop}
+  <MobileNotFound />
+{:else if isDesktop}
+  <Router {url}>
+    <Route path="/">
+      <DesktopIndex />
+    </Route>
+    <Route path="/auth/check">
+      <DesktopCheck />
+    </Route>
+    <Route path="/auth/register">
+      <DesktopRegister />
+    </Route>
+    <Route path="/auth/login">
+      <DesktopLogin />
+    </Route>
+    <Route path="*">
+      <DesktopNotFound />
+    </Route>
+  </Router>
 {:else}
   <Router {url}>
     <Route path="/">
-      <Index />
+      <MobileIndex />
     </Route>
     <Route path="/auth/check">
-      <Check />
+      <MobileCheck />
     </Route>
     <Route path="/auth/register">
-      <Register />
+      <MobileRegister />
     </Route>
     <Route path="/auth/login">
-      <Login />
+      <MobileLogin />
     </Route>
     <Route path="*">
-      <NotFound />
+      <MobileNotFound />
     </Route>
-  </Router>
+  </Router>  
 {/if}
