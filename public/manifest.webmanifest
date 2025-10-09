@@ -1,13 +1,17 @@
 {
-  "name": "OpenHack",
-  "short_name": "OpenHack",
-  "description": "OpenHack Participants Application",
+  "name": "openhack",
+  "short_name": "openhack",
+  "description": "openhack participants application",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "window-controls-overlay"],
   "background_color": "#000000",
   "theme_color": "#000000",
+  "colors": {
+    "navigationbar": "#000000",
+    "statusbar": "#000000"
+  },
   "orientation": "portrait",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },

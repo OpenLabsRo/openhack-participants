@@ -3,13 +3,13 @@
   import { accountLoading, login } from '$runes/accountRune';
   import { navigate } from 'svelte5-router';
   import { errorMessage, setError, clearError } from '$runes/errorRune';
-  import AuthLeader from '$lib/components/desktop/AuthLeader.svelte';
+  import AuthLeader from '$lib/components/mobile/AuthLeader.svelte';
   import { Input } from "$components/ui/input";
   import Button from '$lib/components/ui/button/button.svelte'
   import { Alert } from '$lib/components/ui/alert'
   import { CircleAlertIcon } from '@lucide/svelte'
   import AlertDescription from '$lib/components/ui/alert/alert-description.svelte'
-  import AuthContainer from '$lib/components/desktop/AuthContainer.svelte'
+  import AuthContainer from '$lib/components/mobile/AuthContainer.svelte'
   import LoadingIndicator from '$lib/components/shared/LoadingIndicator.svelte'
 
   let password = '';

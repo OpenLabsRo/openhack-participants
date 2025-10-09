@@ -10,6 +10,9 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#000000" />
 
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark light" />
+
     <!-- iOS extra -->
     <meta name="apple-mobile-web-app-status-bar" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -58,11 +61,14 @@
       }
 
       #loading {
+        position: fixed;
+        inset: 0;
         display: flex;
-        justify-content: center;
         align-items: center;
-        height: 100vh;
-        width: 100vw;
+        justify-content: center;
+        width: min(320px, 90vw);
+        height: clamp(160px, 40vh, 280px);
+        margin: auto;
       }
 
       .logo-animation {
