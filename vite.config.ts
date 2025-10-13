@@ -32,5 +32,17 @@ export default defineConfig(({ command }) => {
     css: {
       postcss: './postcss.config.js',
     },
+    optimizeDeps: {
+      include: [
+        'svelte',
+        'svelte/internal',
+        'svelte/internal/disclose-version',
+        'svelte/internal/flags/legacy',
+        'svelte/internal/client',
+        'svelte/store',
+        'svelte5-router',
+        'qr-code-styling',
+      ],
+    },
   }
 })

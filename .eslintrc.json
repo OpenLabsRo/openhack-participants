@@ -26,7 +26,8 @@
         "alwaysTryTypes": true,
         "project": "./tsconfig.json"
       }
-    },
+    }
+  },
   "parserOptions": {
     "sourceType": "module",
     "ecmaVersion": 2020

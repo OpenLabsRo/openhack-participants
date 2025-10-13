@@ -5,15 +5,17 @@
   import { openhackApi } from '$lib/api/openhackApi'
   import { getToken, whoami, removeToken } from '$runes/accountRune'
   import { navigate } from 'svelte5-router'
+
   // desktop routes
-  import DesktopIndex from '$routes/desktop/auth/index.svelte'
+  import DesktopIndex from '$routes/desktop/Index.svelte'
+  import DesktopQrTest from '$routes/desktop/QrTest.svelte'
   import DesktopCheck from '$routes/desktop/auth/Check.svelte'
   import DesktopRegister from '$routes/desktop/auth/Register.svelte'
   import DesktopLogin from '$routes/desktop/auth/Login.svelte'
   import DesktopNotFound from '$routes/desktop/auth/NotFound.svelte'
 
   // mobile routes
-  import MobileIndex from '$routes/mobile/auth/index.svelte'
+  import MobileIndex from '$routes/mobile/Index.svelte'
   import MobileCheck from '$routes/mobile/auth/Check.svelte'
   import MobileRegister from '$routes/mobile/auth/Register.svelte'
   import MobileLogin from '$routes/mobile/auth/Login.svelte'
@@ -25,13 +27,13 @@
   export let url = ''
 
   function checkDesktop(): boolean {
-    if (typeof window === 'undefined') return true; // assume desktop during SSR
+    if (typeof window === 'undefined') return true // assume desktop during SSR
 
-    const mqWidth   = window.matchMedia('(min-width: 768px)').matches;
-    const mqHover   = window.matchMedia('(hover: hover)').matches;
-    const mqPointer = window.matchMedia('(pointer: fine)').matches;
+    const mqWidth = window.matchMedia('(min-width: 768px)').matches
+    const mqHover = window.matchMedia('(hover: hover)').matches
+    const mqPointer = window.matchMedia('(pointer: fine)').matches
 
-    return mqWidth && (mqHover || mqPointer);
+    return mqWidth && (mqHover || mqPointer)
   }
 
   let isLoading = true
@@ -75,14 +77,11 @@
 
     const minimumWait = new Promise((resolve) => setTimeout(resolve, 700))
 
-
     try {
       await Promise.all([sessionCheck(), minimumWait])
     } finally {
       isLoading = false
     }
-
-
   })
 </script>
 
@@ -96,6 +95,9 @@
   <Router {url}>
     <Route path="/">
       <DesktopIndex />
+    </Route>
+    <Route path="/qr-test">
+      <DesktopQrTest />
     </Route>
     <Route path="/auth/check">
       <DesktopCheck />
@@ -127,5 +129,5 @@
     <Route path="*">
       <MobileNotFound />
     </Route>
-  </Router>  
+  </Router>
 {/if}

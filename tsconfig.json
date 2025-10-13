@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "baseUrl": ".",
     "paths": {
       "$lib": ["src/lib"],
@@ -23,7 +23,7 @@
       "$types": ["src/types"],
       "$types/*": ["src/types/*"],
       "$img": ["img"],
-      "$img/*": ["src/types/*"]
+      "$img/*": ["img/*"]
     }
   },
   "include": ["src"]
