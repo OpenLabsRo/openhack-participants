@@ -18,7 +18,7 @@
     <Card
       class="relative flex flex-col items-center gap-5 border border-[#2E2E2E] bg-[#171717] px-8 py-10 text-center shadow-[0_30px_80px_rgba(0,0,0,0.55)] sm:px-12 sm:py-12"
     >
-      <img src="/img/logo.svg" alt="OpenHack logo" class="h-14 w-auto sm:h-16" />
+      <img src="/icons/logo.svg" alt="OpenHack logo" class="h-14 w-auto sm:h-16" />
       <span class="text-6xl font-black tracking-[0.22em] text-white sm:text-7xl">{code}</span>
       <div class="space-y-1.5">
         <h1 class="text-lg font-semibold text-white sm:text-xl">{title}</h1>

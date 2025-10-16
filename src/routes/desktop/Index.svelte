@@ -99,7 +99,7 @@
           <div class="space-y-2">
             <div class="space-y-1">
               <h2 class="text-2xl font-bold text-white md:text-3xl">{displayName}</h2>
-              {#if teamName}
+              {#if teamName && teamName.trim().length > 0}
                 <p class="text-sm text-zinc-400 md:text-base">Team {teamName}</p>
               {/if}
             </div>

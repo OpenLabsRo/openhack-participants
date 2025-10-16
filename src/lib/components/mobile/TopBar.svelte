@@ -44,7 +44,7 @@
     onclick={handleLogoClick}
     aria-label="Go to not found page"
   >
-    <img src="/img/logo.svg" alt="OpenHack" class="h-8 w-auto" />
+  <img src="/icons/logo-full.svg" alt="OpenHack" class="h-8 w-auto" />
   </button>
   <button
     type="button"

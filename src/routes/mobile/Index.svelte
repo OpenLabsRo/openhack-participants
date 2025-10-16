@@ -58,6 +58,12 @@
   $: qrData = $accountRune?.id ?? 'openhack-participant'
   $: initials = getInitials(displayName)
 
+  function truncateEnd(value: string | undefined | null, max = 25) {
+    if (!value) return ''
+    if (value.length <= max) return value
+    return value.slice(0, max - 1) + '…'
+  }
+
   function formatDate(value: string | undefined | null): string {
     if (!value) return ''
     // Backend sends dates in dd.mm.yyyy format
@@ -78,7 +84,6 @@
 
 <main class="min-h-screen bg-black pb-28 text-white">
   <TopBar />
-
   <!-- Content -->
   <div class="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-4">
     <Card class="p-5">
@@ -101,8 +106,11 @@
               {#if email}
                 <div class="flex items-center gap-2">
                   <MailIcon class="h-4 w-4 flex-shrink-0 text-zinc-500" />
-                  <span class="truncate">{email}</span>
+                  <span class="flex-1 min-w-0 block overflow-hidden truncate" title={email}>{truncateEnd(email, 25)}</span>
                 </div>
+              {/if}
+              {#if teamName && teamName.trim().length > 0}
+                <p class="text-sm text-zinc-400">Team {teamName}</p>
               {/if}
               {#if phoneNumber}
                 <div class="flex items-center gap-2">
@@ -127,6 +135,7 @@
     </Card>
 
     <Card>
+
       <CardHeader class="px-5 py-5 pb-3">
         <CardTitle>Personal Information</CardTitle>
         <CardDescription>Update your personal details and profile information.</CardDescription>

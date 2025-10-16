@@ -120,34 +120,11 @@
         <div>
           <h3 class="text-lg font-semibold">Install OpenHack</h3>
           <p class="mt-1 text-sm text-zinc-300">For the best experience we recommend installing the app</p>
-          <!-- Debug status: show whether native deferred prompt is available and SW/controller status -->
-          <div class="mt-2 space-y-1 text-xs">
-            {#if deferredPrompt}
-              <div><span class="inline-block rounded-full bg-emerald-600 px-2 py-0.5">Native prompt available</span></div>
-            {:else}
-              <div><span class="inline-block rounded-full bg-yellow-600 px-2 py-0.5">Native prompt not available</span></div>
-            {/if}
-
-            <div>
-              {#if typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller}
-                <span class="inline-block rounded-full bg-emerald-500 px-2 py-0.5">Service worker active</span>
-              {:else}
-                <span class="inline-block rounded-full bg-yellow-500 px-2 py-0.5">Service worker inactive</span>
-              {/if}
-            </div>
-
-            <div>
-              {#if typeof window !== 'undefined' && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')}
-                <span class="inline-block rounded-full bg-emerald-500 px-2 py-0.5">Secure context</span>
-              {:else}
-                <span class="inline-block rounded-full bg-yellow-500 px-2 py-0.5">Insecure context</span>
-              {/if}
-            </div>
-          </div>
+          
         </div>
       </div>
 
-      {#if deferredPrompt && !showInstructions}
+  {#if deferredPrompt && typeof deferredPrompt.prompt === 'function' && !showInstructions}
         <div class="mt-4 flex gap-3">
           <button
             class="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
