@@ -5,9 +5,17 @@
   import { openhackApi } from '$lib/api/openhackApi'
   import { getToken, whoami, removeToken } from '$runes/accountRune'
   import { navigate } from 'svelte5-router'
+  import { fetchFlags } from '$runes/flagsRune'
+  import {
+    shouldShowInstallPrompt,
+    setupPWAListeners,
+    isRunningAsPWA
+  } from '$lib/utils/pwaInitialize'
 
   // desktop routes
   import DesktopIndex from '$routes/desktop/Index.svelte'
+  import DesktopTeam from '$routes/desktop/Team.svelte'
+  import DesktopSubmissions from '$routes/desktop/Submissions.svelte'
   import DesktopQrTest from '$routes/desktop/QrTest.svelte'
   import DesktopCheck from '$routes/desktop/auth/Check.svelte'
   import DesktopRegister from '$routes/desktop/auth/Register.svelte'
@@ -16,6 +24,8 @@
 
   // mobile routes
   import MobileIndex from '$routes/mobile/Index.svelte'
+  import MobileTeam from '$routes/mobile/Team.svelte'
+  import MobileSubmissions from '$routes/mobile/Submissions.svelte'
   import MobileCheck from '$routes/mobile/auth/Check.svelte'
   import MobileRegister from '$routes/mobile/auth/Register.svelte'
   import MobileLogin from '$routes/mobile/auth/Login.svelte'
@@ -23,8 +33,14 @@
 
   // shared components
   import Loading from '$lib/components/shared/Loading.svelte'
+  import PWAInstallPrompt from '$lib/components/shared/PWAInstallPrompt.svelte'
 
   export let url = ''
+  let isAuthPage = false
+  let is404Page = false
+
+  $: isAuthPage = url.startsWith('/auth/check')
+  $: is404Page = url.startsWith('/404')
 
   function checkDesktop(): boolean {
     if (typeof window === 'undefined') return true // assume desktop during SSR
@@ -39,48 +55,87 @@
   let isLoading = true
   let pingFailed = false
   let isDesktop = true
+  let deferredPrompt: any = null
+  let showInstallPrompt = false
 
-  onMount(async () => {
+  onMount(() => {
     isDesktop = checkDesktop()
-    const sessionCheck = async () => {
-      try {
-        // Ping the API to check for connectivity and CORS
-        await openhackApi.General.ping()
 
-        const token = getToken()
-        const isAuthPage = url.startsWith('/auth/check')
+    // Setup PWA install listeners
+    const cleanupPWAListeners = setupPWAListeners((event) => {
+      deferredPrompt = event
+      if (shouldShowInstallPrompt()) {
+        showInstallPrompt = true
+      }
+    })
 
-        if (token) {
-          navigate('/')
-          // If a token exists, try to fetch the user's account data to restore the session
-          try {
-            await whoami()
-          } catch (error) {
-            console.error('Failed to restore session:', error)
-            // If the token is invalid, remove it and redirect to the login page
-            removeToken()
-            if (!isAuthPage) {
-              navigate('/auth/check')
+    // If no beforeinstallprompt event has fired yet, still show the modal on first load
+    // when the heuristics say we should show it (platform-agnostic fallback)
+    try {
+      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const forceShow = params?.get('showPwa') === '1'
+      if (forceShow || shouldShowInstallPrompt()) {
+        // show a modal immediately; deferredPrompt may be null (handled by the component)
+        showInstallPrompt = true
+      }
+    } catch (err) {
+      // ignore localStorage/DOM errors in SSR or restricted environments
+    }
+
+    let isActive = true
+
+    const run = async () => {
+      const sessionCheck = async () => {
+        if (is404Page || !isActive) return
+
+        try {
+          // Ping the API to check for connectivity and CORS
+          await openhackApi.General.ping()
+
+          const token = getToken()
+
+          if (token) {
+            navigate('/')
+            // If a token exists, try to fetch the user's account data to restore the session
+            try {
+              await whoami()
+              // After successful whoami, fetch flags for the user
+              await fetchFlags()
+            } catch (error) {
+              console.error('Failed to restore session:', error)
+              // If the token is invalid, remove it and redirect to the login page
+              removeToken()
+              if (!isAuthPage) {
+                navigate('/auth/check')
+              }
             }
+          } else if (!isAuthPage) {
+            // If no token, redirect to auth check
+            navigate('/auth/check')
           }
-        } else if (!isAuthPage) {
-          // If no token, redirect to auth check
-          navigate('/auth/check')
+        } catch (error) {
+          console.error('API Ping failed:', error)
+          pingFailed = true
+          navigate('/404')
+          return
         }
-      } catch (error) {
-        console.error('API Ping failed:', error)
-        pingFailed = true
-        navigate('/404')
-        return
+      }
+
+      const minimumWait = new Promise((resolve) => setTimeout(resolve, 750))
+
+      try {
+        await Promise.all([sessionCheck(), minimumWait])
+      } finally {
+        if (isActive) isLoading = false
       }
     }
 
-    const minimumWait = new Promise((resolve) => setTimeout(resolve, 700))
+    void run()
 
-    try {
-      await Promise.all([sessionCheck(), minimumWait])
-    } finally {
-      isLoading = false
+    // cleanup listeners when component is destroyed
+    return () => {
+      isActive = false
+      cleanupPWAListeners()
     }
   })
 </script>
@@ -96,6 +151,12 @@
     <Route path="/">
       <DesktopIndex />
     </Route>
+    <Route path="/team">
+      <DesktopTeam />
+    </Route>
+    <Route path="/submission">
+      <DesktopSubmissions />
+    </Route>
     <Route path="/qr-test">
       <DesktopQrTest />
     </Route>
@@ -108,6 +169,9 @@
     <Route path="/auth/login">
       <DesktopLogin />
     </Route>
+    <Route path="/404">
+      <DesktopNotFound />
+    </Route>
     <Route path="*">
       <DesktopNotFound />
     </Route>
@@ -116,6 +180,12 @@
   <Router {url}>
     <Route path="/">
       <MobileIndex />
+    </Route>
+    <Route path="/team">
+      <MobileTeam />
+    </Route>
+    <Route path="/submission">
+      <MobileSubmissions />
     </Route>
     <Route path="/auth/check">
       <MobileCheck />
@@ -126,8 +196,14 @@
     <Route path="/auth/login">
       <MobileLogin />
     </Route>
+    <Route path="/404">
+      <MobileNotFound />
+    </Route>
     <Route path="*">
       <MobileNotFound />
     </Route>
   </Router>
 {/if}
+
+<!-- PWA Install Prompt Modal -->
+<PWAInstallPrompt show={!isLoading && showInstallPrompt} {deferredPrompt} />

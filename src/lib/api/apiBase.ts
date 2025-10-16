@@ -21,18 +21,7 @@ export function resolveApiBase(): string {
   const envFromMeta = readImportMetaEnv()?.API_DEPLOYMENT as string | undefined
   const deployment = envFromProcess || envFromMeta || 'dev'
 
-  // switch (String(deployment)) {
-  //   case 'test':
-  //     return 'http://localhost:9000'
-  //   case 'dev':
-  //     return 'http://localhost:9001'
-  //   case 'prod':
-  //   case 'production':
-  //     return 'http://localhost:9002'
-  //   default:
-  //     return 'http://localhost:9001'
-  // }
-  // return 'https://api.openhack.ro'
+  // return 'https://alpha.openhack.ro'
   return 'https://api.openhack.ro'
 }
 

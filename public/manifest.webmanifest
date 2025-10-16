@@ -1,7 +1,7 @@
 {
-  "name": "openhack",
-  "short_name": "openhack",
-  "description": "openhack participants application",
+  "name": "OpenHack",
+  "short_name": "OpenHack",
+  "description": "OpenHack Participants Application",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

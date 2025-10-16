@@ -27,3 +27,14 @@ export function getProfileGradient(
   const index = hash % PROFILE_GRADIENTS.length
   return PROFILE_GRADIENTS[index]
 }
+
+export function getInitials(name: string | undefined | null): string {
+  if (!name) return 'MI'
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return 'MI'
+  const initials = parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
+  return initials || 'MI'
+}

@@ -67,10 +67,16 @@
 
   function formatDate(value: string | undefined | null): string {
     if (!value) return ''
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return ''
+    // Backend sends dates in dd.mm.yyyy format
+    const parts = value.split('.')
+    if (parts.length !== 3) return ''
+    const day = parts[0]
+    const month = parseInt(parts[1], 10)
+    const year = parts[2]
+    
+    const date = new Date(Number(year), month - 1, Number(day))
     return date.toLocaleDateString('ro-RO', {
-      day: '2-digit',
+      day: 'numeric',
       month: 'long',
       year: 'numeric',
     })
@@ -81,23 +87,23 @@
   <Navbar />
 
   <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 pb-16 pt-10 md:px-8">
-    <Card class="p-6 md:p-3 md:px-8">
+    <Card class="p-6 md:px-8 md:py-3">
       <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div class="flex flex-1 flex-col gap-6 md:flex-row md:items-center md:gap-8">
+        <div class="flex flex-1 flex-col gap-4 md:flex-row md:items-center md:gap-6">
           <div
-            class="flex h-20 w-20 items-center justify-center rounded-full text-3xl font-bold text-white md:h-24 md:w-24"
+            class="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full text-4xl font-bold text-white md:h-28 md:w-28"
             style={`background:${profileGradient}`}
           >
             {initials}
           </div>
-          <div class="space-y-1">
+          <div class="space-y-2">
             <div class="space-y-1">
-              <h2 class="text-2xl font-semibold text-white md:text-3xl">{displayName}</h2>
+              <h2 class="text-2xl font-bold text-white md:text-3xl">{displayName}</h2>
               {#if teamName}
-                <p class="text-xl text-zinc-500 md:text-xl">Team {teamName}</p>
+                <p class="text-sm text-zinc-400 md:text-base">Team {teamName}</p>
               {/if}
             </div>
-            <div class="flex flex-wrap gap-x-6 gap-y-3 text-sm text-zinc-300">
+            <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-zinc-300 md:text-sm">
               {#if email}
                 <div class="flex items-center gap-2">
                   <MailIcon class="h-4 w-4 text-zinc-500" />
@@ -113,11 +119,11 @@
             </div>
           </div>
         </div>
-        <div class="flex items-center justify-center rounded-[10px] bg-transparent p-4">
+        <div class="flex items-center justify-center rounded-[10px] bg-transparent p-2">
           <QRCode
             data={qrData}
-            size={200}
-            margin={18}
+            size={220}
+            margin={16}
             className="bg-transparent"
             showLogo={false}
             logoScale={0.22}

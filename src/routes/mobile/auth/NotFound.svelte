@@ -1,5 +1,5 @@
-<script lang="ts"></script>
+<script lang="ts">
+  import NotFoundPage from '$lib/components/shared/NotFoundPage.svelte'
+</script>
 
-<h1>404 - Page Not Found</h1>
-<p>The page you are looking for does not exist.</p>
-<a href="/">Go to Homepage</a>
+<NotFoundPage homeHref="/" title="We can't seem to find that page" />
