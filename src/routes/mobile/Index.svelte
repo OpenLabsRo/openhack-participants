@@ -109,9 +109,7 @@
                   <span class="flex-1 min-w-0 block overflow-hidden truncate" title={email}>{truncateEnd(email, 25)}</span>
                 </div>
               {/if}
-              {#if teamName && teamName.trim().length > 0}
-                <p class="text-sm text-zinc-400">Team {teamName}</p>
-              {/if}
+              
               {#if phoneNumber}
                 <div class="flex items-center gap-2">
                   <PhoneIcon class="h-4 w-4 flex-shrink-0 text-zinc-500" />
