@@ -14,6 +14,7 @@
 
   // desktop routes
   import DesktopIndex from '$routes/desktop/Index.svelte'
+  // @ts-ignore: resolution may point to generated .d.svelte.ts with an unusual extension
   import DesktopTeam from '$routes/desktop/Team.svelte'
   import DesktopSubmissions from '$routes/desktop/Submissions.svelte'
   import DesktopQrTest from '$routes/desktop/QrTest.svelte'

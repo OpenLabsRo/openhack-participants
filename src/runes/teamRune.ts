@@ -98,6 +98,14 @@ export async function changeTeamName(name: string) {
   })
 }
 
+export async function changeTable(table: string) {
+  return withTeamLoading(async () => {
+    const team = await openhackApi.Teams.changeTable({ table })
+    teamRune.set(team)
+    return team
+  })
+}
+
 export async function deleteTeam() {
   return withTeamLoading(async () => {
     const response = await openhackApi.Teams.remove()
