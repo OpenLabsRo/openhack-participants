@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { authEmail } from '$runes/authRune';
   import { accountLoading, login } from '$runes/accountRune';
   import { navigate } from 'svelte5-router';
@@ -13,13 +14,32 @@
   import LoadingIndicator from '$lib/components/shared/LoadingIndicator.svelte'
 
   let password = '';
+  let joinId = '';
+  let joinName = '';
+
+  onMount(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      joinId = params.get('joinId') ?? '';
+      joinName = params.get('joinName') ?? '';
+    } catch {
+      joinId = '';
+      joinName = '';
+    }
+  });
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
     clearError();
     try {
       await login($authEmail, password);
-      navigate('/'); // Redirect to homepage on successful login
+      const nextParams = joinId ? new URLSearchParams({ id: joinId }) : null;
+      if (nextParams && joinName) {
+        nextParams.set('name', joinName);
+      }
+      const target = nextParams ? `/join?${nextParams.toString()}` : '/';
+      navigate(target); // Redirect after login
     } catch (error) {
       setError(error);
     }

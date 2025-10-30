@@ -53,11 +53,10 @@
     }
   })
 
-  $: displayName = $accountRune?.name ?? 'Mihai Ionel'
+  $: firstName = $accountRune?.firstName?.trim() || 'Mihai'
+  $: lastName = $accountRune?.lastName?.trim() || 'Ionel'
+  $: displayName = [firstName, lastName].filter(Boolean).join(' ') || 'Mihai Ionel'
   $: initials = getInitials(displayName)
-  $: nameParts = displayName.split(' ').filter(Boolean)
-  $: firstName = nameParts[0] ?? 'Mihai'
-  $: lastName = nameParts.slice(1).join(' ') || 'Ionel'
   $: email = $accountRune?.email ?? 'mihai.ionel@openlabs.ro'
   $: phoneNumber = $accountRune?.phoneNumber ?? '07356436232'
   $: university = $accountRune?.university ?? 'UPB FILS CTI'

@@ -9,9 +9,11 @@ export interface Consumables {
 export interface Account {
   id: string;
   email: string;
+  teamID?: string;
+  firstName: string;
+  lastName: string;
+  name?: string;
   password?: string; // Not always present in API responses
-  name: string;
-  teamID: string;
   checkedIn?: boolean;
   consumables?: Consumables;
   dob?: string;

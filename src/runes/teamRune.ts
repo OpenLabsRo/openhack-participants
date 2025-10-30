@@ -14,6 +14,10 @@ import {
   DEFAULT_MIN_DURATION,
   waitMinimumDuration,
 } from '$lib/utils/minDuration.js'
+import {
+  normalizeAccount,
+  normalizeAccounts,
+} from '$lib/utils/normalizeAccount.js'
 
 export const teamRune = writable<Team | null>(null)
 export const teamMembersRune = writable<Account[]>([])
@@ -57,11 +61,13 @@ async function withTeamLoading<T>(task: () => Promise<T>): Promise<T> {
 
 async function refreshAuth({ token, account }: AccountTokenResponse) {
   saveToken(token)
-  accountRune.set(account)
+  accountRune.set(normalizeAccount(account))
 }
 
 function applyMembers(members: Account[]) {
-  teamMembersRune.set(members)
+  const normalized = normalizeAccounts(members)
+  teamMembersRune.set(normalized)
+  return normalized
 }
 
 export async function getTeam() {
@@ -75,8 +81,7 @@ export async function getTeam() {
 export async function loadMembers() {
   return withTeamLoading(async () => {
     const members = await openhackApi.Teams.members()
-    applyMembers(members)
-    return members
+    return applyMembers(members)
   })
 }
 
@@ -118,12 +123,25 @@ export async function deleteTeam() {
 
 export async function join(teamId: string) {
   return withTeamLoading(async () => {
-    const response: AccountMembersResponse = await openhackApi.Teams.join(
-      teamId
-    )
+    const response: AccountMembersResponse =
+      await openhackApi.Teams.join(teamId)
     await refreshAuth(response)
     applyMembers(response.members)
     return await getTeam()
+  })
+}
+
+export async function joinFast(teamId: string) {
+  // Similar to `join` but returns the successful join response immediately
+  // while refreshing the full team document in the background.
+  return withTeamLoading(async () => {
+    const response: AccountMembersResponse =
+      await openhackApi.Teams.join(teamId)
+    await refreshAuth(response)
+    applyMembers(response.members)
+    // trigger a background refresh of the team doc; don't await it here
+    void getTeam()
+    return response
   })
 }
 
@@ -134,6 +152,27 @@ export async function leave() {
     teamRune.set(null)
     teamMembersRune.set([])
     return response
+  })
+}
+
+export async function leaveAndJoin(newTeamId: string) {
+  return withTeamLoading(async () => {
+    // 1. Leave the current team
+    const leaveResponse: AccountMembersResponse =
+      await openhackApi.Teams.leave()
+    await refreshAuth(leaveResponse)
+    teamRune.set(null)
+    teamMembersRune.set([])
+
+    // 2. Join the new team
+    const joinResponse: AccountMembersResponse =
+      await openhackApi.Teams.join(newTeamId)
+    await refreshAuth(joinResponse)
+    applyMembers(joinResponse.members)
+
+    // 3. Fetch the full team document and await it before returning
+    const team = await getTeam()
+    return team
   })
 }
 

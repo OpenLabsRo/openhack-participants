@@ -117,7 +117,7 @@
   $: isSyncing = $teamLoading
   $: canEditTeam = Boolean($flagsRune?.flags?.teams_write)
 
-  $: joinLink = currentTeam?.id ? buildJoinLink(currentTeam.id) : ''
+  $: joinLink = currentTeam?.id ? buildJoinLink(currentTeam.id, currentTeam.name) : ''
   $: if (joinLink !== lastJoinLink) {
     lastJoinLink = joinLink
     if (copied) {
@@ -129,18 +129,24 @@
     }
   }
 
-  function buildJoinLink(teamId: string): string {
+  function buildJoinLink(teamId: string, teamName?: string): string {
+    const params = new URLSearchParams({ id: teamId })
+    if (teamName && teamName.trim().length > 0) {
+      params.set('name', teamName.trim())
+    }
+    const query = params.toString()
+
     const envBase = (import.meta as any)?.env?.VITE_TEAM_JOIN_BASE as string | undefined
     if (envBase && envBase.trim().length > 0) {
       const trimmed = envBase.trim().replace(/\/+$/, '')
-      return `${trimmed}/${teamId}`
+      return `${trimmed}/join?${query}`
     }
 
     if (typeof window !== 'undefined' && window?.location?.origin) {
-      return `${window.location.origin}/join?id=${teamId}`
+      return `${window.location.origin}/join?${query}`
     }
 
-    return `/join?id=${teamId}`
+    return `/join?${query}`
   }
 
   function handleTeamNameInput() {
@@ -326,6 +332,15 @@
       setErrorMessage('Unable to copy the join link. Please copy it manually.')
     }
   }
+
+  function getMemberDisplayName(member: Account): string {
+    const first = member.firstName?.trim() ?? ''
+    const last = member.lastName?.trim() ?? ''
+    if (first || last) {
+      return [first, last].filter(Boolean).join(' ')
+    }
+    return member.name?.trim() || member.email || 'Team member'
+  }
 </script>
 
 <main class="min-h-screen bg-black text-white">
@@ -446,10 +461,10 @@
                         class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white"
                         style={`background:${getProfileGradient(member.id)}`}
                       >
-                        {getInitials(member.name)}
+                        {getInitials(getMemberDisplayName(member))}
                       </div>
                       <div class="flex flex-col">
-                        <span class="text-sm font-medium leading-tight text-white">{member.name}</span>
+                        <span class="text-sm font-medium leading-tight text-white">{getMemberDisplayName(member)}</span>
                         {#if member.email}
                           <span class="text-xs text-zinc-400">{member.email}</span>
                         {/if}
@@ -457,24 +472,6 @@
                     </div>
                   </li>
                 {/each}
-                <!-- {#each members as member (member.id)}
-                  <li class="flex items-center justify-between gap-3 rounded-2xl bg-black/30 px-4 py-2.5">
-                    <div class="flex items-center gap-3">
-                      <div
-                        class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white"
-                        style={`background:${getProfileGradient(member.id)}`}
-                      >
-                        {getInitials(member.name)}
-                      </div>
-                      <div class="flex flex-col">
-                        <span class="text-sm font-medium leading-tight text-white">{member.name}</span>
-                        {#if member.email}
-                          <span class="text-xs text-zinc-400">{member.email}</span>
-                        {/if}
-                      </div>
-                    </div>
-                  </li>
-                {/each} -->
               {/if}
             </ul>
 

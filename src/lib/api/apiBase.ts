@@ -23,6 +23,7 @@ export function resolveApiBase(): string {
 
   // return 'https://alpha.openhack.ro'
   return 'https://api.openhack.ro'
+  // return 'http://localhost:9000/'
 }
 
 // createApi(baseURL?) -> returns a configured Axios instance.

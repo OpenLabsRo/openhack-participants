@@ -13,3 +13,13 @@ export interface Team {
   deleted: boolean
   table: string
 }
+
+export interface TeamPreview {
+  id: string
+  name: string
+  table?: string
+  members_count?: number
+  members?: Account[]
+  submission?: Submission
+}
+import type { Account } from './account.js'

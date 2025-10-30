@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance } from 'axios'
 import api from './apiClient.js'
 import type { Account } from '$types/account.js'
-import type { Team } from '$types/team.js'
+import type { Team, TeamPreview } from '$types/team.js'
 import type { Flags } from '$types/flags.js'
 
 // Error helpers --------------------------------------------------------------------------------
@@ -120,6 +120,11 @@ export function createApiHelpers(apiClient: AxiosInstance = api) {
   const Teams = {
     // detail returns the caller's team document (requires membership).
     detail: () => request<Team>(() => apiClient.get('/teams')),
+    // preview returns metadata for a team by ID without requiring membership.
+    preview: (teamId: string) =>
+      request<TeamPreview>(() =>
+        apiClient.get('/teams/meta/preview', { params: { id: teamId } })
+      ),
     // create provisions a team and returns token/account for the creator.
     create: (name: string) =>
       request<AccountTokenResponse>(() => apiClient.post('/teams', { name })),

@@ -12,6 +12,7 @@ import {
   DEFAULT_MIN_DURATION,
   waitMinimumDuration,
 } from '$lib/utils/minDuration.js'
+import { normalizeAccount } from '$lib/utils/normalizeAccount.js'
 
 /**
  * accountRune store
@@ -89,8 +90,9 @@ export async function register(email: string, password: string) {
         password,
       })
     saveToken(token)
-    accountRune.set(account)
-    return account
+    const normalized = normalizeAccount(account)
+    accountRune.set(normalized)
+    return normalized
   })
 }
 
@@ -110,8 +112,9 @@ export async function login(email: string, password: string) {
         password,
       })
     saveToken(token)
-    accountRune.set(account)
-    return account
+    const normalized = normalizeAccount(account)
+    accountRune.set(normalized)
+    return normalized
   })
 }
 
@@ -126,8 +129,9 @@ export async function login(email: string, password: string) {
 export async function whoami() {
   return withAccountLoading(async () => {
     const account = await openhackApi.Accounts.whoami()
-    accountRune.set(account)
-    return account
+    const normalized = normalizeAccount(account)
+    accountRune.set(normalized)
+    return normalized
   })
 }
 

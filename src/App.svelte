@@ -3,9 +3,13 @@
   import { onMount } from 'svelte'
   import './app.css'
   import { openhackApi } from '$lib/api/openhackApi'
-  import { getToken, whoami, removeToken } from '$runes/accountRune'
+  import { accountRune, getToken, whoami, removeToken } from '$runes/accountRune'
   import { navigate } from 'svelte5-router'
-  import { fetchFlags } from '$runes/flagsRune'
+  import {
+    fetchFlags,
+    startPolling as startFlagPolling,
+    stopPolling as stopFlagPolling,
+  } from '$runes/flagsRune'
   import {
     shouldShowInstallPrompt,
     setupPWAListeners,
@@ -18,6 +22,7 @@
   import DesktopTeam from '$routes/desktop/Team.svelte'
   import DesktopSubmissions from '$routes/desktop/Submissions.svelte'
   import DesktopQrTest from '$routes/desktop/QrTest.svelte'
+  import DesktopJoin from '$routes/desktop/Join.svelte'
   import DesktopCheck from '$routes/desktop/auth/Check.svelte'
   import DesktopRegister from '$routes/desktop/auth/Register.svelte'
   import DesktopLogin from '$routes/desktop/auth/Login.svelte'
@@ -30,6 +35,7 @@
   import MobileCheck from '$routes/mobile/auth/Check.svelte'
   import MobileRegister from '$routes/mobile/auth/Register.svelte'
   import MobileLogin from '$routes/mobile/auth/Login.svelte'
+  import MobileJoin from '$routes/mobile/Join.svelte'
   import MobileNotFound from '$routes/mobile/auth/NotFound.svelte'
 
   // shared components
@@ -40,7 +46,7 @@
   let isAuthPage = false
   let is404Page = false
 
-  $: isAuthPage = url.startsWith('/auth/check')
+  $: isAuthPage = url.startsWith('/auth')
   $: is404Page = url.startsWith('/404')
 
   function checkDesktop(): boolean {
@@ -58,6 +64,8 @@
   let isDesktop = true
   let deferredPrompt: any = null
   let showInstallPrompt = false
+  let accountUnsubscribe: (() => void) | null = null
+  let flagsPollingActive = false
 
   onMount(() => {
     isDesktop = checkDesktop()
@@ -84,6 +92,16 @@
     }
 
     let isActive = true
+    accountUnsubscribe = accountRune.subscribe((account) => {
+      if (account && !flagsPollingActive) {
+        flagsPollingActive = true
+        void fetchFlags().catch(() => {})
+        startFlagPolling()
+      } else if (!account && flagsPollingActive) {
+        stopFlagPolling()
+        flagsPollingActive = false
+      }
+    })
 
     const run = async () => {
       const sessionCheck = async () => {
@@ -96,7 +114,34 @@
           const token = getToken()
 
           if (token) {
-            navigate('/')
+            let currentPath =
+              typeof window !== 'undefined' ? window.location.pathname : '/'
+            let currentSearch =
+              typeof window !== 'undefined' ? window.location.search : ''
+
+            if (typeof window !== 'undefined') {
+              currentPath = window.location.pathname
+              currentSearch = window.location.search
+            }
+
+            if (currentPath.startsWith('/auth')) {
+              try {
+                const params = new URLSearchParams(currentSearch)
+                const joinId = params.get('joinId')
+                const joinName = params.get('joinName')
+                if (joinId) {
+                  const target = new URLSearchParams({ id: joinId })
+                  if (joinName) {
+                    target.set('name', joinName)
+                  }
+                  navigate(`/join?${target.toString()}`)
+                } else {
+                  navigate('/')
+                }
+              } catch {
+                navigate('/')
+              }
+            }
             // If a token exists, try to fetch the user's account data to restore the session
             try {
               await whoami()
@@ -112,7 +157,36 @@
             }
           } else if (!isAuthPage) {
             // If no token, redirect to auth check
-            navigate('/auth/check')
+            let currentPath =
+              typeof window !== 'undefined' ? window.location.pathname : '/'
+            let currentSearch =
+              typeof window !== 'undefined' ? window.location.search : ''
+
+            if (typeof window !== 'undefined') {
+              currentPath = window.location.pathname
+              currentSearch = window.location.search
+            }
+
+            if (currentPath === '/join') {
+              try {
+                const params = new URLSearchParams(currentSearch)
+                const joinId = params.get('id')
+                const joinName = params.get('name')
+                if (joinId) {
+                  const target = new URLSearchParams({ joinId })
+                  if (joinName) {
+                    target.set('joinName', joinName)
+                  }
+                  navigate(`/auth/check?${target.toString()}`)
+                } else {
+                  navigate('/auth/check')
+                }
+              } catch {
+                navigate('/auth/check')
+              }
+            } else {
+              navigate('/auth/check')
+            }
           }
         } catch (error) {
           console.error('API Ping failed:', error)
@@ -137,6 +211,14 @@
     return () => {
       isActive = false
       cleanupPWAListeners()
+      if (accountUnsubscribe) {
+        accountUnsubscribe()
+        accountUnsubscribe = null
+      }
+      if (flagsPollingActive) {
+        stopFlagPolling()
+        flagsPollingActive = false
+      }
     }
   })
 </script>
@@ -157,6 +239,9 @@
     </Route>
     <Route path="/submission">
       <DesktopSubmissions />
+    </Route>
+    <Route path="/join">
+      <DesktopJoin />
     </Route>
     <Route path="/qr-test">
       <DesktopQrTest />
@@ -187,6 +272,9 @@
     </Route>
     <Route path="/submission">
       <MobileSubmissions />
+    </Route>
+    <Route path="/join">
+      <MobileJoin />
     </Route>
     <Route path="/auth/check">
       <MobileCheck />

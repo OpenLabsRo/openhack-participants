@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { authEmail } from '$runes/authRune'
   import { accountLoading, check } from '$runes/accountRune'
   import { navigate } from 'svelte5-router'
@@ -15,16 +16,35 @@
   $: $authEmail && clearError();
 
   let loading = false
+  let joinId = ''
+  let joinName = ''
+
+  onMount(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const params = new URLSearchParams(window.location.search)
+      joinId = params.get('joinId') ?? ''
+      joinName = params.get('joinName') ?? ''
+    } catch {
+      joinId = ''
+      joinName = ''
+    }
+  })
 
   async function handleSubmit(event: Event) {
     event.preventDefault()
     clearError() // Clear previous errors
     try {
       const { registered } = await check($authEmail)
+      const nextParams = new URLSearchParams()
+      if (joinId) nextParams.set('joinId', joinId)
+      if (joinName) nextParams.set('joinName', joinName)
+      const suffix = nextParams.toString()
+
       if (registered) {
-        navigate('/auth/login')
+        navigate(suffix ? `/auth/login?${suffix}` : '/auth/login')
       } else {
-        navigate('/auth/register')
+        navigate(suffix ? `/auth/register?${suffix}` : '/auth/register')
       }
     } catch (error) {
       setError(error)

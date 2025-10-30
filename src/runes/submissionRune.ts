@@ -120,3 +120,7 @@ function updateStores(team: Team) {
   teamRune.set(team)
   submissionRune.set(team.submission ?? null)
 }
+
+teamRune.subscribe((team) => {
+  submissionRune.set(team?.submission ?? null)
+})

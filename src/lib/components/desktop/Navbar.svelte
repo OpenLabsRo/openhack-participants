@@ -89,7 +89,9 @@
     return initials || 'MI'
   }
 
-  $: displayName = $accountRune?.name ?? 'Mihai Ionel'
+  $: displayName = [$accountRune?.firstName, $accountRune?.lastName]
+    .filter((part) => (part ?? '').trim().length > 0)
+    .join(' ') || 'Mihai Ionel'
   $: initials = getInitials(displayName)
   $: currentHref = $currentPath
   $: profileGradient = getProfileGradient($accountRune?.id ?? displayName)

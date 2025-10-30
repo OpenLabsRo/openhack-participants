@@ -42,6 +42,19 @@
       href="/icons/icon-1024.png"
     />
     <script>
+      // Clear old caches on every page load
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          names.forEach((name) => {
+            if (name !== 'app-v2') {
+              caches.delete(name).then(() => {
+                console.info('Cleared old cache:', name)
+              })
+            }
+          })
+        })
+      }
+
       if (
         'serviceWorker' in navigator &&
         (window.location.protocol === 'https:' ||

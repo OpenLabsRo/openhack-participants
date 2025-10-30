@@ -113,12 +113,16 @@ const sampleAccount: Account = {
   id: 'acct_1',
   email: 'member@example.com',
   password: 'hashed',
+  firstName: 'Member',
+  lastName: 'One',
   name: 'Member One',
   teamID: 'team_1',
 }
 
 const sampleAccountUpdated: Account = {
   ...sampleAccount,
+  firstName: 'Member',
+  lastName: 'Two',
   name: 'Member Two',
 }
 
@@ -126,6 +130,8 @@ const secondaryAccount: Account = {
   id: 'acct_2',
   email: 'other@example.com',
   password: 'hashed',
+  firstName: 'Other',
+  lastName: 'User',
   name: 'Other User',
   teamID: 'team_1',
 }
@@ -175,6 +181,7 @@ async function runHelperTests() {
       }),
       'get /accounts/flags': () => ({ status: 200, data: flagsPayload }),
       'get /teams': () => ({ status: 200, data: sampleTeam }),
+      'get /teams/meta/preview': () => ({ status: 200, data: sampleTeam }),
       'post /teams': () => ({
         status: 200,
         data: { token: 'tkn', account: sampleAccount },
