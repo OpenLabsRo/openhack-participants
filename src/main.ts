@@ -16,4 +16,4 @@ setTimeout(() => {
 
   // We don't need to export the app instance anymore as it's self-contained
   // export default app
-}, 700)
+}, 300)

@@ -30,6 +30,7 @@
   let previewMembers: Account[] = []
   let previewTable = ''
   let membersCount = 0
+  let previewLoaded = false
 
   $: currentTeam = $teamRune as Team | null
   $: alreadyInTarget = Boolean(
@@ -113,6 +114,7 @@
         : 'Unable to load team details. You can retry or continue anyway.'
     } finally {
       previewLoading = false
+      previewLoaded = true
     }
   }
 
@@ -195,7 +197,7 @@
           Back home
         </Button>
       </section>
-    {:else if !initialized}
+    {:else if !initialized || (initialized && !previewLoaded)}
       <section
         class="flex w-full max-w-xl items-center justify-center rounded-3xl border border-white/5 bg-[#121212] px-10 py-16 shadow-lg shadow-black/40"
       >

@@ -147,7 +147,7 @@
   $: currentTeam = $teamRune as Team | null
   $: currentSubmission = $submissionRune as Submission | null
   $: hasTeam = Boolean(currentTeam)
-  $: isSyncing = $submissionLoading
+  $: isSyncing = $submissionLoading || isReloading
   $: canEditSubmission = Boolean($flagsRune?.flags?.submissions_write)
   $: canViewSubmission = Boolean($flagsRune?.flags?.submissions_read)
   $: disableInputs = !hasTeam || !canEditSubmission || isSyncing

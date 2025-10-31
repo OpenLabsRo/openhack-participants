@@ -13,6 +13,10 @@ import {
   waitMinimumDuration,
 } from '$lib/utils/minDuration.js'
 import { normalizeAccount } from '$lib/utils/normalizeAccount.js'
+import { teamRune, teamMembersRune } from './teamRune.js'
+import { submissionRune } from './submissionRune.js'
+import { flagsRune, stopPolling } from './flagsRune.js'
+import { clearError } from './errorRune.js'
 
 /**
  * accountRune store
@@ -138,9 +142,15 @@ export async function whoami() {
 /**
  * logout()
  * - Purpose: Clear local auth state and remove token header.
- * - Side effects: removes stored token via removeToken() and clears `accountRune`
+ * - Side effects: removes stored token, clears all runes, and stops polling
  */
 export function logout() {
   removeToken()
   accountRune.set(null)
+  teamRune.set(null)
+  teamMembersRune.set([])
+  submissionRune.set(null)
+  flagsRune.set(null)
+  clearError()
+  stopPolling()
 }

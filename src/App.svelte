@@ -3,7 +3,12 @@
   import { onMount } from 'svelte'
   import './app.css'
   import { openhackApi } from '$lib/api/openhackApi'
-  import { accountRune, getToken, whoami, removeToken } from '$runes/accountRune'
+  import {
+    accountRune,
+    getToken,
+    whoami,
+    removeToken,
+  } from '$runes/accountRune'
   import { navigate } from 'svelte5-router'
   import {
     fetchFlags,
@@ -13,7 +18,7 @@
   import {
     shouldShowInstallPrompt,
     setupPWAListeners,
-    isRunningAsPWA
+    isRunningAsPWA,
   } from '$lib/utils/pwaInitialize'
 
   // desktop routes
@@ -81,7 +86,10 @@
     // If no beforeinstallprompt event has fired yet, still show the modal on first load
     // when the heuristics say we should show it (platform-agnostic fallback)
     try {
-      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const params =
+        typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search)
+          : null
       const forceShow = params?.get('showPwa') === '1'
       if (forceShow || shouldShowInstallPrompt()) {
         // show a modal immediately; deferredPrompt may be null (handled by the component)
@@ -196,7 +204,7 @@
         }
       }
 
-      const minimumWait = new Promise((resolve) => setTimeout(resolve, 750))
+      const minimumWait = new Promise((resolve) => setTimeout(resolve, 300))
 
       try {
         await Promise.all([sessionCheck(), minimumWait])

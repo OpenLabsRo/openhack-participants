@@ -123,9 +123,7 @@
   $: isSyncing = $teamLoading
   $: canEditTeam = Boolean($flagsRune?.flags?.teams_write)
 
-  $: joinLink = currentTeam?.id
-    ? buildJoinLink(currentTeam.id, currentTeam.name)
-    : ''
+  $: joinLink = currentTeam?.id ? buildJoinLink(currentTeam.id) : ''
   $: if (joinLink !== lastJoinLink) {
     lastJoinLink = joinLink
     if (copied) {
@@ -137,11 +135,8 @@
     }
   }
 
-  function buildJoinLink(teamId: string, teamName?: string): string {
+  function buildJoinLink(teamId: string): string {
     const params = new URLSearchParams({ id: teamId })
-    if (teamName && teamName.trim().length > 0) {
-      params.set('name', teamName.trim())
-    }
     const query = params.toString()
 
     const envBase = (import.meta as any)?.env?.VITE_TEAM_JOIN_BASE as
