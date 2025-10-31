@@ -5,10 +5,8 @@
   import Navbar from '$lib/components/desktop/Navbar.svelte'
   import Button from '$components/ui/button/button.svelte'
   import { Input } from '$components/ui/input'
-  import {
-    teamRune,
-    getTeam,
-  } from '$runes/teamRune.js'
+  import { RotateCw } from '@lucide/svelte'
+  import { teamRune, getTeam } from '$runes/teamRune.js'
   import {
     submissionRune,
     updateName,
@@ -46,6 +44,7 @@
   let pendingPresSync: string | null = null
 
   let currentTeamId: string | null = null
+  let isReloading = false
 
   let unsubscribeTeam: (() => void) | undefined
   let unsubscribeSubmission: (() => void) | undefined
@@ -414,14 +413,31 @@
   function handleGoToTeam() {
     navigate('/team')
   }
+
+  async function handleReload() {
+    if (isReloading || $submissionLoading) return
+    isReloading = true
+    try {
+      await getTeam()
+      clearError()
+    } catch (error) {
+      setError(error)
+    } finally {
+      isReloading = false
+    }
+  }
 </script>
 
 <main class="min-h-screen bg-black text-white">
   <Navbar />
 
-  <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 pb-16 pt-10 md:px-8">
+  <div
+    class="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 pb-16 pt-10 md:px-8"
+  >
     {#if isInitializing}
-      <section class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 shadow-lg shadow-black/30">
+      <section
+        class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 shadow-lg shadow-black/30"
+      >
         <div class="h-6 w-48 animate-pulse rounded bg-white/10"></div>
         <div class="mt-4 h-4 w-72 animate-pulse rounded bg-white/5"></div>
         <div class="mt-9 space-y-5">
@@ -432,17 +448,24 @@
         </div>
       </section>
     {:else if !canViewSubmission}
-      <section class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 text-center shadow-lg shadow-black/30">
+      <section
+        class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 text-center shadow-lg shadow-black/30"
+      >
         <h1 class="text-2xl font-semibold text-white">Submissions locked</h1>
         <p class="mt-4 text-sm text-zinc-400">
-          Your account does not currently have access to view submission details. Please contact an administrator if you think this is a mistake.
+          Your account does not currently have access to view submission
+          details. Please contact an administrator if you think this is a
+          mistake.
         </p>
       </section>
     {:else if !hasTeam}
-      <section class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 text-center shadow-lg shadow-black/30">
+      <section
+        class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 text-center shadow-lg shadow-black/30"
+      >
         <h1 class="text-2xl font-semibold text-white">Create or join a team</h1>
         <p class="mt-4 text-sm leading-relaxed text-zinc-400">
-          Submission details become available once you are part of a team. Head to the team page to create a new team or join using an invite link.
+          Submission details become available once you are part of a team. Head
+          to the team page to create a new team or join using an invite link.
         </p>
         <Button
           class="mt-8 h-12 w-full max-w-xs rounded-xl bg-white text-base font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
@@ -452,31 +475,56 @@
         </Button>
       </section>
     {:else}
-      <section class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 shadow-lg shadow-black/30">
-        <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <section
+        class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 shadow-lg shadow-black/30"
+      >
+        <header
+          class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        >
           <div>
-            <h1 class="text-2xl font-semibold text-white">Submit your project</h1>
-            <p class="text-sm text-zinc-400">All the info is auto-saved as you type</p>
+            <h1 class="text-2xl font-semibold text-white">
+              Submit your project
+            </h1>
+            <p class="text-sm text-zinc-400">
+              All the info is auto-saved as you type
+            </p>
           </div>
-          <div
-            class="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-200"
-            aria-live="polite"
-          >
-            {#if isSyncing}
-              <span class="inline-flex h-3 w-3 items-center justify-center">
-                <span class="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-              </span>
-              <span>Syncing…</span>
-            {:else}
-              <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-              <span>Up to date</span>
-            {/if}
+          <div class="flex items-center gap-3">
+            <div
+              class="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-200"
+              aria-live="polite"
+            >
+              {#if isSyncing}
+                <span class="inline-flex h-3 w-3 items-center justify-center">
+                  <span
+                    class="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin"
+                  ></span>
+                </span>
+                <span>Syncing…</span>
+              {:else}
+                <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                <span>Up to date</span>
+              {/if}
+            </div>
+            <button
+              class="text-zinc-400 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+              class:animate-spin={isReloading}
+              disabled={isSyncing || isReloading}
+              onclick={handleReload}
+              title="Reload"
+            >
+              <RotateCw class="h-4 w-4" />
+            </button>
           </div>
         </header>
 
         <div class="mt-9 flex flex-col gap-6">
           <div class="space-y-3">
-            <label for="project-name" class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Project Name</label>
+            <label
+              for="project-name"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Project Name</label
+            >
             <Input
               id="project-name"
               bind:value={nameInput}
@@ -489,7 +537,11 @@
           </div>
 
           <div class="space-y-3">
-            <label for="project-desc" class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Short project description</label>
+            <label
+              for="project-desc"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Short project description</label
+            >
             <textarea
               id="project-desc"
               bind:value={descInput}
@@ -502,7 +554,11 @@
           </div>
 
           <div class="space-y-3">
-            <label for="project-repo" class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Github Link</label>
+            <label
+              for="project-repo"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Github Link</label
+            >
             <Input
               id="project-repo"
               bind:value={repoInput}
@@ -515,7 +571,11 @@
           </div>
 
           <div class="space-y-3">
-            <label for="project-pres" class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Presentation URL</label>
+            <label
+              for="project-pres"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Presentation URL</label
+            >
             <Input
               id="project-pres"
               bind:value={presInput}
@@ -526,7 +586,8 @@
               class="h-12 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100 focus-visible:border-[#444]"
             />
             <p class="text-sm text-zinc-500">
-              You will have to upload your presentation/slides on a platform like Google Drive or WeTransfer in order to present.
+              You will have to upload your presentation/slides on a platform
+              like Google Drive or WeTransfer in order to present.
             </p>
           </div>
         </div>

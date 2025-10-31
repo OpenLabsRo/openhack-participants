@@ -50,7 +50,7 @@ async function withFlagsLoading<T>(task: () => Promise<T>): Promise<T> {
   }
 }
 
-let pollIntervalMs = 5000
+let pollIntervalMs = 1000
 let pollHandle: number | null = null
 
 /**
