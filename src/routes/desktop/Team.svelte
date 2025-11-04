@@ -3,6 +3,8 @@
   import { get } from 'svelte/store'
   import { navigate } from 'svelte5-router'
   import Navbar from '$lib/components/desktop/Navbar.svelte'
+  import VoteBanner from '$lib/components/shared/VoteBanner.svelte'
+  import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte'
   import Button from '$components/ui/button/button.svelte'
   import { Input } from '$components/ui/input'
   import { RotateCw } from '@lucide/svelte'
@@ -19,10 +21,11 @@
   } from '$runes/teamRune.js'
   import { flagsRune } from '$runes/flagsRune.js'
   import { setError, clearError, setErrorMessage } from '$runes/errorRune'
-  import { isApiError } from '$lib/api/openhackApi'
+  import { openhackApi, isApiError } from '$lib/api/openhackApi'
   import { getProfileGradient, getInitials } from '$lib/utils/profileColor.js'
   import type { Account } from '$types/account.js'
   import type { Team } from '$types/team.js'
+  import type { VotingStatusResponse } from '$types/account'
 
   const DEBOUNCE_MS = 1000
   let isInitializing = true
@@ -43,6 +46,12 @@
   let unsubscribeTeam: (() => void) | undefined
   let canEditTeam = false
   let isReloading = false
+  let votingStatus: VotingStatusResponse | null = null
+  let showLeaveDialog = false
+  let isLeavingTeam = false
+
+  $: votingEnabled = Boolean($flagsRune?.flags?.voting)
+  $: hasVoted = Boolean(votingStatus?.hasVoted)
 
   onMount(() => {
     let active = true
@@ -66,6 +75,17 @@
         if (active) {
           isInitializing = false
         }
+      }
+    }
+
+    const loadVotingStatus = async () => {
+      try {
+        const status = await openhackApi.Voting.getStatus()
+        if (active) {
+          votingStatus = status
+        }
+      } catch (error) {
+        console.error('Failed to fetch voting status:', error)
       }
     }
 
@@ -104,6 +124,7 @@
     })
 
     void load()
+    void loadVotingStatus()
 
     return () => {
       active = false
@@ -298,20 +319,26 @@
     }
   }
 
-  async function handleLeaveTeam() {
+  function openLeaveDialog() {
+    showLeaveDialog = true
+  }
+
+  function closeLeaveDialog() {
+    showLeaveDialog = false
+  }
+
+  async function confirmLeaveTeam() {
     if (!hasTeam) return
-    const confirmed =
-      typeof window !== 'undefined'
-        ? window.confirm('Are you sure you want to leave the team?')
-        : true
 
-    if (!confirmed) return
-
+    isLeavingTeam = true
     try {
       await leave()
       clearError()
+      closeLeaveDialog()
     } catch (error) {
       setError(error)
+    } finally {
+      isLeavingTeam = false
     }
   }
 
@@ -368,6 +395,7 @@
   <div
     class="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-16 pt-10 md:px-8"
   >
+    <VoteBanner {votingEnabled} {hasVoted} />
     {#if isInitializing && !hasTeam && isSyncing}
       <div class="flex flex-1 items-center justify-center py-24">
         <div
@@ -552,7 +580,7 @@
             <Button
               class="mt-auto h-12 w-full rounded-xl !bg-[#FF3B30] text-base font-semibold text-white transition hover:!bg-[#ff5249] disabled:!bg-[#833030]"
               disabled={isSyncing || !canEditTeam}
-              on:click={handleLeaveTeam}
+              on:click={openLeaveDialog}
             >
               Leave Team
             </Button>
@@ -560,5 +588,17 @@
         </section>
       </div>
     {/if}
+
+    <ConfirmDialog
+      bind:isOpen={showLeaveDialog}
+      title="Leave team?"
+      description="You will no longer be part of this team. You can join another team later."
+      confirmText="Leave"
+      cancelText="Cancel"
+      isDangerous={true}
+      isLoading={isLeavingTeam}
+      onConfirm={confirmLeaveTeam}
+      onCancel={closeLeaveDialog}
+    />
   </div>
 </main>

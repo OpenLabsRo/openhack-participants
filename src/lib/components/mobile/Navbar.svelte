@@ -10,6 +10,7 @@
     icon: string
     flagRequired?: string
     disabled?: boolean
+    matchPaths?: string[]
   }
 
   const navItemsConfig: NavItem[] = [
@@ -22,6 +23,7 @@
     {
       label: 'Team',
       href: '/team',
+      matchPaths: ['/team'],
       icon: '/icons/team_icon.svg',
       flagRequired: 'teams_read',
       disabled: true,
@@ -73,6 +75,20 @@
   }
 
   $: currentHref = $currentPath
+
+  function isItemActive(item: NavItem, path: string): boolean {
+    if (path.startsWith('/vote')) {
+      return false
+    }
+    if (item.matchPaths && item.matchPaths.length > 0) {
+      return item.matchPaths.some((matchPath) => {
+        if (path === matchPath) return true
+        const withSlash = matchPath.endsWith('/') ? matchPath : `${matchPath}/`
+        return path.startsWith(withSlash)
+      })
+    }
+    return path === item.href
+  }
 </script>
 
 <nav
@@ -80,11 +96,11 @@
   style="backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);"
 >
   {#each navItems as item}
-      <button
+    <button
       type="button"
       class={`flex items-center justify-center p-3 transition ${item.disabled ? 'cursor-not-allowed opacity-40' : 'active:scale-95'}`}
       onclick={(event) => handleNavClick(event, item)}
-      aria-current={currentHref === item.href ? 'page' : undefined}
+      aria-current={isItemActive(item, currentHref) ? 'page' : undefined}
       aria-disabled={item.disabled ? 'true' : undefined}
       aria-label={item.label}
       disabled={item.disabled}
@@ -96,7 +112,7 @@
         style={`filter: ${
           item.disabled
             ? 'invert(56%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(93%) contrast(90%)'
-            : currentHref === item.href
+            : isItemActive(item, currentHref)
               ? 'invert(47%) sepia(98%) saturate(4454%) hue-rotate(352deg) brightness(101%) contrast(99%)'
               : 'invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%)'
         }`}

@@ -12,9 +12,10 @@
     icon: string
     flagRequired?: string
     disabled?: boolean
+    matchPaths?: string[]
   }
 
-    const navItemsConfig: NavItem[] = [
+  const navItemsConfig: NavItem[] = [
     {
       label: 'Profile',
       href: '/',
@@ -24,6 +25,7 @@
     {
       label: 'Team',
       href: '/team',
+      matchPaths: ['/team'],
       icon: '/icons/team_icon.svg',
       flagRequired: 'teams_read',
       disabled: true,
@@ -85,16 +87,34 @@
     if (!name) return 'MI'
     const parts = name.trim().split(/\s+/).filter(Boolean)
     if (parts.length === 0) return 'MI'
-    const initials = parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('')
+    const initials = parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('')
     return initials || 'MI'
   }
 
-  $: displayName = [$accountRune?.firstName, $accountRune?.lastName]
-    .filter((part) => (part ?? '').trim().length > 0)
-    .join(' ') || 'Mihai Ionel'
+  $: displayName =
+    [$accountRune?.firstName, $accountRune?.lastName]
+      .filter((part) => (part ?? '').trim().length > 0)
+      .join(' ') || 'Mihai Ionel'
   $: initials = getInitials(displayName)
   $: currentHref = $currentPath
   $: profileGradient = getProfileGradient($accountRune?.id ?? displayName)
+
+  function isItemActive(item: NavItem, path: string): boolean {
+    if (path.startsWith('/vote')) {
+      return false
+    }
+    if (item.matchPaths && item.matchPaths.length > 0) {
+      return item.matchPaths.some((matchPath) => {
+        if (path === matchPath) return true
+        const withSlash = matchPath.endsWith('/') ? matchPath : `${matchPath}/`
+        return path.startsWith(withSlash)
+      })
+    }
+    return path === item.href
+  }
 
   function openLogoutModal() {
     showLogoutModal = true
@@ -120,24 +140,35 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<nav class="flex items-center justify-between bg-black px-10 py-8 text-base text-white">
-  <a class="flex items-center gap-3 pl-11" href="/404" aria-label="OpenHack not found" onclick={handleLogoClick}>
+<nav
+  class="flex items-center justify-between bg-black px-10 py-8 text-base text-white"
+>
+  <button
+    type="button"
+    class="flex items-center gap-3 pl-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded"
+    aria-label="OpenHack not found"
+    onclick={handleLogoClick}
+  >
     <img src="/icons/logo.svg" alt="" class="h-6 w-auto" />
-  </a>
+  </button>
 
   <ul class="flex items-center gap-8">
     {#each navItems as item}
       <li>
-        <a
-          href={item.href}
-          class={`group flex items-center gap-2.5 px-3 py-2 transition ${item.disabled ? 'cursor-not-allowed opacity-70' : ''}`}
+        <button
+          type="button"
+          class={`group flex items-center gap-2.5 px-3 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded ${item.disabled ? 'cursor-not-allowed opacity-70' : ''}`}
           style={`color: ${
-            item.disabled ? '#919191' : currentHref === item.href ? '#FE5428' : '#ffffff'
+            item.disabled
+              ? '#919191'
+              : isItemActive(item, currentHref)
+                ? '#FE5428'
+                : '#ffffff'
           }`}
           onclick={(event) => handleNavClick(event, item)}
-          aria-current={currentHref === item.href ? 'page' : undefined}
+          aria-current={isItemActive(item, currentHref) ? 'page' : undefined}
           aria-disabled={item.disabled ? 'true' : undefined}
-          tabindex={item.disabled ? -1 : undefined}
+          disabled={item.disabled}
         >
           <img
             src={item.icon}
@@ -146,13 +177,14 @@
             style={`filter: ${
               item.disabled
                 ? 'invert(56%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(93%) contrast(90%)'
-                : currentHref === item.href
+                : isItemActive(item, currentHref)
                   ? 'invert(47%) sepia(98%) saturate(4454%) hue-rotate(352deg) brightness(101%) contrast(99%)'
                   : 'invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%)'
             }`}
           />
-          <span class="text-base font-semibold tracking-wide">{item.label}</span>
-        </a>
+          <span class="text-base font-semibold tracking-wide">{item.label}</span
+          >
+        </button>
       </li>
     {/each}
   </ul>
@@ -160,7 +192,7 @@
   <button
     type="button"
     class="group mr-11 flex items-center gap-3 rounded-full border border-transparent px-3 py-2 text-sm font-medium transition hover:border-white/10 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-  onclick={openLogoutModal}
+    onclick={openLogoutModal}
     aria-haspopup="dialog"
     aria-expanded={showLogoutModal}
   >
@@ -190,7 +222,9 @@
       aria-describedby="logout-dialog-description"
       class="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-[#141414] p-6 text-white shadow-lg shadow-black/40"
     >
-      <h2 id="logout-dialog-title" class="text-lg font-semibold text-white">Sign out?</h2>
+      <h2 id="logout-dialog-title" class="text-lg font-semibold text-white">
+        Sign out?
+      </h2>
       <p id="logout-dialog-description" class="mt-2 text-sm text-zinc-400">
         You will need to log in again to access your OpenHack profile.
       </p>

@@ -4,7 +4,7 @@
         "description": "Backend API for OpenHack handling participant accounts, teams, feature flags, and superuser check-in tooling.",
         "title": "OpenHack Backend API",
         "contact": {},
-        "version": "25.10.03.1"
+        "version": "25.11.04.2"
     },
     "basePath": "/",
     "paths": {
@@ -190,7 +190,7 @@
                         "AccountAuth": []
                     }
                 ],
-                "description": "Stores a new display name and returns a refreshed token so clients keep their session in sync.",
+                "description": "Stores new first and last names and returns a refreshed token so clients keep their session in sync.",
                 "consumes": [
                     "application/json"
                 ],
@@ -203,7 +203,7 @@
                 "summary": "Update display name",
                 "parameters": [
                     {
-                        "description": "Display name",
+                        "description": "First and last name",
                         "name": "payload",
                         "in": "body",
                         "required": true,
@@ -285,6 +285,335 @@
                 }
             }
         },
+        "/accounts/voting/finalists": {
+            "get": {
+                "security": [
+                    {
+                        "AccountAuth": []
+                    }
+                ],
+                "description": "Returns the 3 finalist teams (middle, right, left order)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Accounts Voting"
+                ],
+                "summary": "Get finalists",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/accounts.VotingFinalistsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountNoToken"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._FlagRequired"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/voting/status": {
+            "get": {
+                "security": [
+                    {
+                        "AccountAuth": []
+                    }
+                ],
+                "description": "Returns whether voting is open, if user has voted, and the list of finalists",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Accounts Voting"
+                ],
+                "summary": "Get voting status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/accounts.VotingStatusResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountNoToken"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/voting/vote": {
+            "post": {
+                "security": [
+                    {
+                        "AccountAuth": []
+                    }
+                ],
+                "description": "Records a vote for one of the finalists",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Accounts Voting"
+                ],
+                "summary": "Cast a vote",
+                "parameters": [
+                    {
+                        "description": "Team ID to vote for",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accounts.VotingCastRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/accounts.VotingCastResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountNoToken"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._FlagRequired"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountAlreadyRegistered"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/judge/judgment": {
+            "post": {
+                "security": [
+                    {
+                        "JudgeAuth": []
+                    }
+                ],
+                "description": "Records a judgment where a judge compares two teams and selects a winner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Judges"
+                ],
+                "summary": "Create a judgment",
+                "parameters": [
+                    {
+                        "description": "Judgment details",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/judge.CreateJudgmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Judgment"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountNoToken"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/judge/next-team": {
+            "post": {
+                "security": [
+                    {
+                        "JudgeAuth": []
+                    }
+                ],
+                "description": "Returns the next team ID for the judge to evaluate. Applies offset on first call, then cycles through teams until judging is complete.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Judges"
+                ],
+                "summary": "Get next team for judging",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._JudgingFinished"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountNoToken"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/judge/team": {
+            "get": {
+                "security": [
+                    {
+                        "JudgeAuth": []
+                    }
+                ],
+                "description": "Returns detailed information about a team including submission data.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Judges"
+                ],
+                "summary": "Get team information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Team"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountNoToken"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._TeamNotFound"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/judge/upgrade": {
+            "post": {
+                "description": "Validates the 2-minute connect token and mints a new 24-hour token for judge platform access.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Judges Auth"
+                ],
+                "summary": "Upgrade connect token to full session token",
+                "parameters": [
+                    {
+                        "description": "Connect token",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/judge.JudgeUpgradeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/judge.JudgeUpgradeResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountNoToken"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
         "/meta/ping": {
             "get": {
                 "description": "Lightweight heartbeat used by load balancers to confirm the OpenHack API is alive.",
@@ -317,7 +646,7 @@
                 "summary": "Current deployment version",
                 "responses": {
                     "200": {
-                        "description": "25.10.03.1",
+                        "description": "25.10.01.0",
                         "schema": {
                             "type": "string"
                         }
@@ -846,6 +1175,198 @@
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/errmsg._FlagStageNotFound"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/superusers/judges/connect": {
+            "post": {
+                "security": [
+                    {
+                        "SuperUserAuth": []
+                    }
+                ],
+                "description": "Creates a short-lived 2-minute token that is displayed via QR code for judges to scan and exchange for a full session token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Superusers Judging"
+                ],
+                "summary": "Generate judge connect token",
+                "parameters": [
+                    {
+                        "description": "Judge ID",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/judging.JudgeConnectRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/judging.JudgeConnectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._SuperUserNoToken"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._JudgeNotFound"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/superusers/judging/compute-rankings": {
+            "post": {
+                "security": [
+                    {
+                        "SuperUserAuth": []
+                    }
+                ],
+                "description": "Uses the Crowd Bradley-Terry algorithm to compute team rankings and judge reliability scores from all judgments in the database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Superusers Judging"
+                ],
+                "summary": "Compute team rankings from judgments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/judging.ComputeRankingsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._SuperUserNoToken"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/superusers/judging/init": {
+            "post": {
+                "security": [
+                    {
+                        "SuperUserAuth": []
+                    }
+                ],
+                "description": "Groups judges by pair attribute and creates Latin rectangle assignment",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Superusers Judging"
+                ],
+                "summary": "Initialize judging configuration with judge pairing",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._SuperUserNoToken"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/superusers/judging/judge": {
+            "post": {
+                "security": [
+                    {
+                        "SuperUserAuth": []
+                    }
+                ],
+                "description": "Creates a new judge with the given ID and name.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Superusers Judging"
+                ],
+                "summary": "Create a new judge",
+                "parameters": [
+                    {
+                        "description": "Judge details",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/judging.JudgeCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Judge"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._SuperUserNoToken"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._JudgeAlreadyExists"
                         }
                     },
                     "500": {
@@ -1707,6 +2228,47 @@
                 }
             }
         },
+        "/teams/meta/preview": {
+            "get": {
+                "description": "Retrieves basic team information including name, members, submission details, and table assignment for a given team ID. Useful for participants reviewing team details before joining via a join link.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams Meta"
+                ],
+                "summary": "Get team preview details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/teams.TeamPreviewResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._TeamNotFound"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
         "/teams/name": {
             "patch": {
                 "security": [
@@ -1753,6 +2315,49 @@
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/errmsg._TeamNotFound"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountHasNoTeam"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/teams/submissions": {
+            "get": {
+                "security": [
+                    {
+                        "AccountAuth": []
+                    }
+                ],
+                "description": "Retrieves the current submission details including name, description, repo, and presentation links.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams Submissions"
+                ],
+                "summary": "Fetch the team submission",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/teams.SubmissionResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errmsg._AccountNoToken"
                         }
                     },
                     "409": {
@@ -2082,7 +2687,10 @@
         "accounts.AccountEditRequest": {
             "type": "object",
             "properties": {
-                "name": {
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
                     "type": "string"
                 }
             }
@@ -2106,6 +2714,50 @@
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "accounts.VotingCastRequest": {
+            "type": "object",
+            "properties": {
+                "teamID": {
+                    "type": "string"
+                }
+            }
+        },
+        "accounts.VotingCastResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "accounts.VotingFinalistsResponse": {
+            "type": "object",
+            "properties": {
+                "finalists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Team"
+                    }
+                }
+            }
+        },
+        "accounts.VotingStatusResponse": {
+            "type": "object",
+            "properties": {
+                "finalists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Team"
+                    }
+                },
+                "hasVoted": {
+                    "type": "boolean"
+                },
+                "votingOpen": {
+                    "type": "boolean"
                 }
             }
         },
@@ -2252,6 +2904,45 @@
                 }
             }
         },
+        "errmsg._JudgeAlreadyExists": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "judge already exists"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 409
+                }
+            }
+        },
+        "errmsg._JudgeNotFound": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "judge not found"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 404
+                }
+            }
+        },
+        "errmsg._JudgingFinished": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "judging finished"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 200
+                }
+            }
+        },
         "errmsg._SuperUserNoToken": {
             "type": "object",
             "properties": {
@@ -2388,6 +3079,115 @@
                 }
             }
         },
+        "judge.CreateJudgmentRequest": {
+            "type": "object",
+            "properties": {
+                "losingTeamID": {
+                    "type": "string",
+                    "example": "team_002"
+                },
+                "winningTeamID": {
+                    "type": "string",
+                    "example": "team_001"
+                }
+            }
+        },
+        "judge.JudgeUpgradeRequest": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "judge.JudgeUpgradeResponse": {
+            "type": "object",
+            "properties": {
+                "judge": {
+                    "$ref": "#/definitions/models.Judge"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "judge.NextTeamResponse": {
+            "type": "object",
+            "properties": {
+                "teamID": {
+                    "type": "string",
+                    "example": "team_001"
+                }
+            }
+        },
+        "judging.ComputeRankingsResponse": {
+            "type": "object",
+            "properties": {
+                "judgeReliability": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number",
+                            "format": "float64"
+                        }
+                    }
+                },
+                "judgmentCount": {
+                    "type": "integer"
+                },
+                "rankedTeams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "teamScores": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number",
+                        "format": "float64"
+                    }
+                },
+                "teamUncertainty": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number",
+                        "format": "float64"
+                    }
+                }
+            }
+        },
+        "judging.JudgeConnectRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "judge_001"
+                }
+            }
+        },
+        "judging.JudgeConnectResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "judging.JudgeCreateRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "judge_001"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Judge Alice"
+                }
+            }
+        },
         "models.Account": {
             "type": "object",
             "properties": {
@@ -2403,17 +3203,29 @@
                 "email": {
                     "type": "string"
                 },
+                "firstName": {
+                    "type": "string"
+                },
+                "flags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "foodRestrictions": {
                     "type": "string"
+                },
+                "hasVoted": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"
                 },
-                "medicalConditions": {
-                    "description": "extra information about the user",
+                "lastName": {
                     "type": "string"
                 },
-                "name": {
+                "medicalConditions": {
+                    "description": "extra information about the user",
                     "type": "string"
                 },
                 "password": {
@@ -2495,6 +3307,43 @@
                 }
             }
         },
+        "models.Judge": {
+            "type": "object",
+            "properties": {
+                "currentTeam": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pair": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Judgment": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "judgeID": {
+                    "type": "string"
+                },
+                "losingTeamID": {
+                    "type": "string"
+                },
+                "winningTeamID": {
+                    "type": "string"
+                }
+            }
+        },
         "models.SuperUser": {
             "type": "object",
             "properties": {
@@ -2569,7 +3418,10 @@
                 "email": {
                     "type": "string"
                 },
-                "name": {
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
                     "type": "string"
                 }
             }
@@ -2671,6 +3523,27 @@
                 }
             }
         },
+        "teams.SubmissionResponse": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string",
+                    "example": "A brief description of my project"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Project"
+                },
+                "pres": {
+                    "type": "string",
+                    "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                },
+                "repo": {
+                    "type": "string",
+                    "example": "https://github.com/user/repo"
+                }
+            }
+        },
         "teams.TeamChangeNameRequest": {
             "type": "object",
             "properties": {
@@ -2697,6 +3570,36 @@
                     "items": {
                         "$ref": "#/definitions/models.Account"
                     }
+                }
+            }
+        },
+        "teams.TeamPreviewResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "team_abc123"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Account"
+                    }
+                },
+                "members_count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Team Awesome"
+                },
+                "submission": {
+                    "$ref": "#/definitions/teams.SubmissionResponse"
+                },
+                "table": {
+                    "type": "string",
+                    "example": "A1"
                 }
             }
         }
@@ -2747,6 +3650,18 @@
         {
             "description": "Badge assignment and pile lookup endpoints.",
             "name": "Superusers Badges"
+        },
+        {
+            "description": "Judge token generation and judging initialization endpoints.",
+            "name": "Superusers Judging"
+        },
+        {
+            "description": "Judge token upgrade and authentication flows.",
+            "name": "Judges Auth"
+        },
+        {
+            "description": "Judge team assignment and judging endpoints.",
+            "name": "Judges Core"
         },
         {
             "description": "Meta routes like ping and whoami",

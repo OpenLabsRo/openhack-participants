@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import Navbar from '$lib/components/mobile/Navbar.svelte'
   import TopBar from '$lib/components/mobile/TopBar.svelte'
+  import VoteBanner from '$lib/components/shared/VoteBanner.svelte'
   import {
     Card,
     CardContent,
@@ -13,11 +14,17 @@
   import { Mail as MailIcon, Phone as PhoneIcon } from '@lucide/svelte'
   import { accountRune } from '$runes/accountRune.js'
   import { openhackApi, isApiError } from '$lib/api/openhackApi'
+  import { flagsRune } from '$runes/flagsRune.js'
   import { getProfileGradient, getInitials } from '$lib/utils/profileColor.js'
   import QRCode from '$lib/components/shared/QRCode.svelte'
+  import type { VotingStatusResponse } from '$types/account'
 
   let teamName = ''
   let qrData = 'openhack-participant'
+  let votingStatus: VotingStatusResponse | null = null
+
+  $: votingEnabled = Boolean($flagsRune?.flags?.voting)
+  $: hasVoted = Boolean(votingStatus?.hasVoted)
 
   onMount(() => {
     let isActive = true
@@ -30,7 +37,10 @@
         }
       } catch (error) {
         if (isActive) {
-          if (isApiError(error) && (error.status === 404 || error.status === 403)) {
+          if (
+            isApiError(error) &&
+            (error.status === 404 || error.status === 403)
+          ) {
             teamName = ''
           } else {
             console.error('Failed to fetch team detail:', error)
@@ -39,7 +49,19 @@
       }
     }
 
+    const loadVotingStatus = async () => {
+      try {
+        const status = await openhackApi.Voting.getStatus()
+        if (isActive) {
+          votingStatus = status
+        }
+      } catch (error) {
+        console.error('Failed to fetch voting status:', error)
+      }
+    }
+
     void loadTeam()
+    void loadVotingStatus()
 
     return () => {
       isActive = false
@@ -48,7 +70,8 @@
 
   $: firstName = $accountRune?.firstName?.trim() || 'Mihai'
   $: lastName = $accountRune?.lastName?.trim() || 'Ionel'
-  $: displayName = [firstName, lastName].filter(Boolean).join(' ') || 'Mihai Ionel'
+  $: displayName =
+    [firstName, lastName].filter(Boolean).join(' ') || 'Mihai Ionel'
   $: email = $accountRune?.email ?? 'mihai.ionel@openlabs.ro'
   $: phoneNumber = $accountRune?.phoneNumber ?? '07356436232'
   $: university = $accountRune?.university ?? 'UPB FILS CTI'
@@ -71,7 +94,7 @@
     const day = parts[0]
     const month = parseInt(parts[1], 10)
     const year = parts[2]
-    
+
     const date = new Date(Number(year), month - 1, Number(day))
     return date.toLocaleDateString('ro-RO', {
       day: 'numeric',
@@ -85,6 +108,7 @@
   <TopBar />
   <!-- Content -->
   <div class="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-4">
+    <VoteBanner {votingEnabled} {hasVoted} />
     <Card class="p-5">
       <div class="flex flex-col gap-6">
         <div class="flex items-center gap-6">
@@ -105,10 +129,13 @@
               {#if email}
                 <div class="flex items-center gap-2">
                   <MailIcon class="h-4 w-4 flex-shrink-0 text-zinc-500" />
-                  <span class="flex-1 min-w-0 block overflow-hidden truncate" title={email}>{truncateEnd(email, 25)}</span>
+                  <span
+                    class="flex-1 min-w-0 block overflow-hidden truncate"
+                    title={email}>{truncateEnd(email, 25)}</span
+                  >
                 </div>
               {/if}
-              
+
               {#if phoneNumber}
                 <div class="flex items-center gap-2">
                   <PhoneIcon class="h-4 w-4 flex-shrink-0 text-zinc-500" />
@@ -132,15 +159,19 @@
     </Card>
 
     <Card>
-
       <CardHeader class="px-5 py-5 pb-3">
         <CardTitle>Personal Information</CardTitle>
-        <CardDescription>Update your personal details and profile information.</CardDescription>
+        <CardDescription
+          >Update your personal details and profile information.</CardDescription
+        >
       </CardHeader>
       <CardContent class="px-5 pb-5 pt-0">
         <div class="grid gap-4 text-sm text-zinc-200">
           <div class="personal-field space-y-1.5">
-            <label class="text-[10px] uppercase tracking-[0.14em] text-zinc-500" for="first-name">First Name</label>
+            <label
+              class="text-[10px] uppercase tracking-[0.14em] text-zinc-500"
+              for="first-name">First Name</label
+            >
             <Input
               id="first-name"
               value={firstName}
@@ -150,7 +181,10 @@
           </div>
 
           <div class="personal-field space-y-1.5">
-            <label class="text-[10px] uppercase tracking-[0.14em] text-zinc-500" for="last-name">Last Name</label>
+            <label
+              class="text-[10px] uppercase tracking-[0.14em] text-zinc-500"
+              for="last-name">Last Name</label
+            >
             <Input
               id="last-name"
               value={lastName}
@@ -160,7 +194,10 @@
           </div>
 
           <div class="personal-field space-y-1.5">
-            <label class="text-[10px] uppercase tracking-[0.14em] text-zinc-500" for="email">Email</label>
+            <label
+              class="text-[10px] uppercase tracking-[0.14em] text-zinc-500"
+              for="email">Email</label
+            >
             <Input
               id="email"
               value={email}
@@ -170,7 +207,10 @@
           </div>
 
           <div class="personal-field space-y-1.5">
-            <label class="text-[10px] uppercase tracking-[0.14em] text-zinc-500" for="phone">Phone Number</label>
+            <label
+              class="text-[10px] uppercase tracking-[0.14em] text-zinc-500"
+              for="phone">Phone Number</label
+            >
             <Input
               id="phone"
               value={phoneNumber}
@@ -180,7 +220,10 @@
           </div>
 
           <div class="personal-field space-y-1.5">
-            <label class="text-[10px] uppercase tracking-[0.14em] text-zinc-500" for="university">University</label>
+            <label
+              class="text-[10px] uppercase tracking-[0.14em] text-zinc-500"
+              for="university">University</label
+            >
             <Input
               id="university"
               value={university}
@@ -190,7 +233,10 @@
           </div>
 
           <div class="personal-field space-y-1.5">
-            <label class="text-[10px] uppercase tracking-[0.14em] text-zinc-500" for="dob">Date of Birth</label>
+            <label
+              class="text-[10px] uppercase tracking-[0.14em] text-zinc-500"
+              for="dob">Date of Birth</label
+            >
             <Input
               id="dob"
               value={extraField}

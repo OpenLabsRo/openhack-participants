@@ -28,6 +28,7 @@
   import DesktopSubmissions from '$routes/desktop/Submissions.svelte'
   import DesktopQrTest from '$routes/desktop/QrTest.svelte'
   import DesktopJoin from '$routes/desktop/Join.svelte'
+  import DesktopVote from '$routes/desktop/Vote.svelte'
   import DesktopCheck from '$routes/desktop/auth/Check.svelte'
   import DesktopRegister from '$routes/desktop/auth/Register.svelte'
   import DesktopLogin from '$routes/desktop/auth/Login.svelte'
@@ -41,6 +42,7 @@
   import MobileRegister from '$routes/mobile/auth/Register.svelte'
   import MobileLogin from '$routes/mobile/auth/Login.svelte'
   import MobileJoin from '$routes/mobile/Join.svelte'
+  import MobileVote from '$routes/mobile/Vote.svelte'
   import MobileNotFound from '$routes/mobile/auth/NotFound.svelte'
 
   // shared components
@@ -245,6 +247,9 @@
     <Route path="/team">
       <DesktopTeam />
     </Route>
+    <Route path="/vote">
+      <DesktopVote />
+    </Route>
     <Route path="/submission">
       <DesktopSubmissions />
     </Route>
@@ -277,6 +282,9 @@
     </Route>
     <Route path="/team">
       <MobileTeam />
+    </Route>
+    <Route path="/vote">
+      <MobileVote />
     </Route>
     <Route path="/submission">
       <MobileSubmissions />

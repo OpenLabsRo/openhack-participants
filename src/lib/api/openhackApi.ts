@@ -1,6 +1,12 @@
 import axios, { type AxiosInstance } from 'axios'
 import api from './apiClient.js'
-import type { Account } from '$types/account.js'
+import type {
+  Account,
+  VotingFinalistsResponse,
+  VotingStatusResponse,
+  VotingCastRequest,
+  VotingCastResponse,
+} from '$types/account.js'
 import type { Team, TeamPreview } from '$types/team.js'
 import type { Flags } from '$types/flags.js'
 
@@ -178,7 +184,25 @@ export function createApiHelpers(apiClient: AxiosInstance = api) {
     ping: () => request<string>(() => apiClient.get('/meta/ping')),
   }
 
-  return { Accounts, Teams, Submissions, Flags, General }
+  const Voting = {
+    // getFinalists retrieves the 3 finalist teams.
+    getFinalists: () =>
+      request<VotingFinalistsResponse>(() =>
+        apiClient.get('/accounts/voting/finalists')
+      ),
+    // getStatus retrieves voting status including whether voting is open and if user has voted.
+    getStatus: () =>
+      request<VotingStatusResponse>(() =>
+        apiClient.get('/accounts/voting/status')
+      ),
+    // castVote records a vote for one of the finalist teams.
+    castVote: (payload: VotingCastRequest) =>
+      request<VotingCastResponse>(() =>
+        apiClient.post('/accounts/voting/vote', payload)
+      ),
+  }
+
+  return { Accounts, Teams, Submissions, Flags, General, Voting }
 }
 
 export const openhackApi = createApiHelpers()

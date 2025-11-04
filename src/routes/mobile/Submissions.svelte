@@ -4,12 +4,10 @@
   import { navigate } from 'svelte5-router'
   import TopBar from '$lib/components/mobile/TopBar.svelte'
   import Navbar from '$lib/components/mobile/Navbar.svelte'
+  import VoteBanner from '$lib/components/shared/VoteBanner.svelte'
   import Button from '$components/ui/button/button.svelte'
   import { Input } from '$components/ui/input'
-  import {
-    teamRune,
-    getTeam,
-  } from '$runes/teamRune.js'
+  import { teamRune, getTeam } from '$runes/teamRune.js'
   import {
     submissionRune,
     updateName,
@@ -20,8 +18,9 @@
   } from '$runes/submissionRune.js'
   import { flagsRune } from '$runes/flagsRune.js'
   import { setError, clearError } from '$runes/errorRune'
-  import { isApiError } from '$lib/api/openhackApi'
+  import { openhackApi, isApiError } from '$lib/api/openhackApi'
   import type { Submission, Team } from '$types/team.js'
+  import type { VotingStatusResponse } from '$types/account'
 
   const DEBOUNCE_MS = 1000
 
@@ -50,6 +49,10 @@
 
   let unsubscribeTeam: (() => void) | undefined
   let unsubscribeSubmission: (() => void) | undefined
+  let votingStatus: VotingStatusResponse | null = null
+
+  $: votingEnabled = Boolean($flagsRune?.flags?.voting)
+  $: hasVoted = Boolean(votingStatus?.hasVoted)
 
   onMount(() => {
     let active = true
@@ -73,6 +76,17 @@
         if (active) {
           isInitializing = false
         }
+      }
+    }
+
+    const loadVotingStatus = async () => {
+      try {
+        const status = await openhackApi.Voting.getStatus()
+        if (active) {
+          votingStatus = status
+        }
+      } catch (error) {
+        console.error('Failed to fetch voting status:', error)
       }
     }
 
@@ -131,6 +145,7 @@
     })
 
     void load()
+    void loadVotingStatus()
 
     return () => {
       active = false
@@ -421,8 +436,11 @@
   <TopBar />
 
   <div class="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-6">
+    <VoteBanner {votingEnabled} {hasVoted} />
     {#if isInitializing}
-      <section class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 shadow-lg shadow-black/30">
+      <section
+        class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 shadow-lg shadow-black/30"
+      >
         <div class="h-5 w-40 animate-pulse rounded bg-white/10"></div>
         <div class="mt-3 h-4 w-60 animate-pulse rounded bg-white/5"></div>
         <div class="mt-8 space-y-4">
@@ -433,17 +451,25 @@
         </div>
       </section>
     {:else if !canViewSubmission}
-      <section class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 text-center shadow-lg shadow-black/30">
+      <section
+        class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 text-center shadow-lg shadow-black/30"
+      >
         <h1 class="text-xl font-semibold text-white">Submissions locked</h1>
         <p class="mt-3 text-sm text-zinc-400">
-          Your account does not currently have access to view submission details. Reach out to an administrator if you need access.
+          Your account does not currently have access to view submission
+          details. Reach out to an administrator if you need access.
         </p>
       </section>
     {:else if !hasTeam}
-      <section class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 text-center shadow-lg shadow-black/30">
-        <h1 class="text-xl font-semibold text-white">Join a team to continue</h1>
+      <section
+        class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 text-center shadow-lg shadow-black/30"
+      >
+        <h1 class="text-xl font-semibold text-white">
+          Join a team to continue
+        </h1>
         <p class="mt-3 text-sm text-zinc-400">
-          Submission info unlocks once you are part of a team. Create a team or use an invite link from a teammate.
+          Submission info unlocks once you are part of a team. Create a team or
+          use an invite link from a teammate.
         </p>
         <Button
           class="mt-6 h-11 w-full rounded-xl bg-white text-base font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
@@ -453,7 +479,9 @@
         </Button>
       </section>
     {:else}
-      <section class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 shadow-lg shadow-black/30">
+      <section
+        class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 shadow-lg shadow-black/30"
+      >
         <header class="flex flex-col gap-3">
           <h1 class="text-xl font-semibold text-white">Submit your project</h1>
           <div class="flex items-center justify-between text-xs text-zinc-400">
@@ -464,7 +492,9 @@
             >
               {#if isSyncing}
                 <span class="inline-flex h-3 w-3 items-center justify-center">
-                  <span class="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
+                  <span
+                    class="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin"
+                  ></span>
                 </span>
                 <span>Syncing…</span>
               {:else}
@@ -477,7 +507,11 @@
 
         <div class="mt-7 flex flex-col gap-5">
           <div class="space-y-2.5">
-            <label for="project-name" class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">Project Name</label>
+            <label
+              for="project-name"
+              class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Project Name</label
+            >
             <Input
               id="project-name"
               bind:value={nameInput}
@@ -490,7 +524,11 @@
           </div>
 
           <div class="space-y-2.5">
-            <label for="project-desc" class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">Short project description</label>
+            <label
+              for="project-desc"
+              class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Short project description</label
+            >
             <textarea
               id="project-desc"
               bind:value={descInput}
@@ -503,7 +541,11 @@
           </div>
 
           <div class="space-y-2.5">
-            <label for="project-repo" class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">Github Link</label>
+            <label
+              for="project-repo"
+              class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Github Link</label
+            >
             <Input
               id="project-repo"
               bind:value={repoInput}
@@ -516,7 +558,11 @@
           </div>
 
           <div class="space-y-2.5">
-            <label for="project-pres" class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">Presentation URL</label>
+            <label
+              for="project-pres"
+              class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Presentation URL</label
+            >
             <Input
               id="project-pres"
               bind:value={presInput}
@@ -527,7 +573,8 @@
               class="h-11 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100 focus-visible:border-[#444]"
             />
             <p class="text-xs text-zinc-500">
-              Upload your slides to Google Drive or WeTransfer and share the public link here.
+              Upload your slides to Google Drive or WeTransfer and share the
+              public link here.
             </p>
           </div>
         </div>

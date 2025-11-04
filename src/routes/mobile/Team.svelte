@@ -3,6 +3,8 @@
   import { get } from 'svelte/store'
   import TopBar from '$lib/components/mobile/TopBar.svelte'
   import Navbar from '$lib/components/mobile/Navbar.svelte'
+  import VoteBanner from '$lib/components/shared/VoteBanner.svelte'
+  import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte'
   import Button from '$components/ui/button/button.svelte'
   import { Input } from '$components/ui/input'
   import {
@@ -18,10 +20,11 @@
   } from '$runes/teamRune.js'
   import { flagsRune } from '$runes/flagsRune.js'
   import { setError, clearError, setErrorMessage } from '$runes/errorRune'
-  import { isApiError } from '$lib/api/openhackApi'
+  import { openhackApi, isApiError } from '$lib/api/openhackApi'
   import { getProfileGradient, getInitials } from '$lib/utils/profileColor.js'
   import type { Account } from '$types/account.js'
   import type { Team } from '$types/team.js'
+  import type { VotingStatusResponse } from '$types/account'
 
   const DEBOUNCE_MS = 1000
   let isInitializing = true
@@ -41,6 +44,12 @@
   let pendingTableSync: string | null = null
   let unsubscribeTeam: (() => void) | undefined
   let canEditTeam = false
+  let votingStatus: VotingStatusResponse | null = null
+  let showLeaveDialog = false
+  let isLeavingTeam = false
+
+  $: votingEnabled = Boolean($flagsRune?.flags?.voting)
+  $: hasVoted = Boolean(votingStatus?.hasVoted)
 
   onMount(() => {
     let active = true
@@ -50,7 +59,10 @@
         await Promise.all([getTeam(), loadMembers()])
         clearError()
       } catch (error) {
-        if (isApiError(error) && (error.status === 404 || error.status === 403)) {
+        if (
+          isApiError(error) &&
+          (error.status === 404 || error.status === 403)
+        ) {
           teamRune.set(null)
           teamMembersRune.set([])
           clearError()
@@ -61,6 +73,17 @@
         if (active) {
           isInitializing = false
         }
+      }
+    }
+
+    const loadVotingStatus = async () => {
+      try {
+        const status = await openhackApi.Voting.getStatus()
+        if (active) {
+          votingStatus = status
+        }
+      } catch (error) {
+        console.error('Failed to fetch voting status:', error)
       }
     }
 
@@ -99,6 +122,7 @@
     })
 
     void load()
+    void loadVotingStatus()
 
     return () => {
       active = false
@@ -118,7 +142,9 @@
   $: isSyncing = $teamLoading
   $: canEditTeam = Boolean($flagsRune?.flags?.teams_write)
 
-  $: joinLink = currentTeam?.id ? buildJoinLink(currentTeam.id, currentTeam.name) : ''
+  $: joinLink = currentTeam?.id
+    ? buildJoinLink(currentTeam.id, currentTeam.name)
+    : ''
   $: if (joinLink !== lastJoinLink) {
     lastJoinLink = joinLink
     if (copied) {
@@ -137,7 +163,9 @@
     }
     const query = params.toString()
 
-    const envBase = (import.meta as any)?.env?.VITE_TEAM_JOIN_BASE as string | undefined
+    const envBase = (import.meta as any)?.env?.VITE_TEAM_JOIN_BASE as
+      | string
+      | undefined
     if (envBase && envBase.trim().length > 0) {
       const trimmed = envBase.trim().replace(/\/+$/, '')
       return `${trimmed}/join?${query}`
@@ -291,19 +319,26 @@
     }
   }
 
-  async function handleLeaveTeam() {
+  function openLeaveDialog() {
+    showLeaveDialog = true
+  }
+
+  function closeLeaveDialog() {
+    showLeaveDialog = false
+  }
+
+  async function confirmLeaveTeam() {
     if (!hasTeam) return
-    const confirmed = typeof window !== 'undefined'
-      ? window.confirm('Are you sure you want to leave the team?')
-      : true
 
-    if (!confirmed) return
-
+    isLeavingTeam = true
     try {
       await leave()
       clearError()
+      closeLeaveDialog()
     } catch (error) {
       setError(error)
+    } finally {
+      isLeavingTeam = false
     }
   }
 
@@ -345,17 +380,23 @@
   <TopBar />
 
   <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-5 pb-20">
+    <VoteBanner {votingEnabled} {hasVoted} />
     {#if isInitializing && !hasTeam && isSyncing}
       <div class="flex flex-1 items-center justify-center py-24">
-        <div class="flex h-40 w-full max-w-sm animate-pulse flex-col items-center justify-center rounded-2xl bg-white/5 text-sm text-zinc-400">
+        <div
+          class="flex h-40 w-full max-w-sm animate-pulse flex-col items-center justify-center rounded-2xl bg-white/5 text-sm text-zinc-400"
+        >
           Loading team information…
         </div>
       </div>
     {:else if !hasTeam}
-      <section class="rounded-2xl border border-white/5 bg-[#121212] px-6 py-10 text-center shadow-lg shadow-black/40">
+      <section
+        class="rounded-2xl border border-white/5 bg-[#121212] px-6 py-10 text-center shadow-lg shadow-black/40"
+      >
         <h1 class="text-2xl font-semibold text-white">Team Management</h1>
         <p class="mt-3 text-sm leading-relaxed text-zinc-400">
-          Use the button below to create a team or join a team with a link received from your team leader.
+          Use the button below to create a team or join a team with a link
+          received from your team leader.
         </p>
         <Button
           class="mt-7 h-11 w-full rounded-xl bg-white text-base font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
@@ -366,11 +407,17 @@
         </Button>
       </section>
     {:else}
-      <section class="rounded-2xl border border-white/5 bg-[#121212] px-5 py-7 shadow-lg shadow-black/30">
-        <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <section
+        class="rounded-2xl border border-white/5 bg-[#121212] px-5 py-7 shadow-lg shadow-black/30"
+      >
+        <header
+          class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        >
           <div>
             <h2 class="text-xl font-semibold text-white">Manage your team</h2>
-            <p class="text-sm text-zinc-400">All the info is auto-saved as you type</p>
+            <p class="text-sm text-zinc-400">
+              All the info is auto-saved as you type
+            </p>
           </div>
           <div
             class="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-200"
@@ -378,7 +425,9 @@
           >
             {#if isSyncing}
               <span class="inline-flex h-3 w-3 items-center justify-center">
-                <span class="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
+                <span
+                  class="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin"
+                ></span>
               </span>
               <span>Syncing…</span>
             {:else}
@@ -390,7 +439,11 @@
 
         <div class="mt-6 space-y-5">
           <div class="space-y-2">
-            <label for="team-name-mobile" class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Team Name</label>
+            <label
+              for="team-name-mobile"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Team Name</label
+            >
             <Input
               id="team-name-mobile"
               bind:value={teamNameInput}
@@ -402,7 +455,11 @@
           </div>
 
           <div class="space-y-2">
-            <label for="team-join-link-mobile" class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Join Link</label>
+            <label
+              for="team-join-link-mobile"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Join Link</label
+            >
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Input
                 id="team-join-link-mobile"
@@ -422,7 +479,11 @@
           </div>
 
           <div class="space-y-2">
-            <label for="team-table-mobile" class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Table Number</label>
+            <label
+              for="team-table-mobile"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              >Table Number</label
+            >
             <Input
               id="team-table-mobile"
               bind:value={tableInput}
@@ -436,21 +497,29 @@
         </div>
       </section>
 
-      <section class="flex h-full flex-col rounded-2xl border border-white/5 bg-[#121212] px-5 py-7 shadow-lg shadow-black/30">
+      <section
+        class="flex h-full flex-col rounded-2xl border border-white/5 bg-[#121212] px-5 py-7 shadow-lg shadow-black/30"
+      >
         <div class="flex items-center justify-between">
           <h3 class="text-xl font-semibold text-white">Team Members</h3>
-          <span class="text-sm text-zinc-500">{members.length} member{members.length === 1 ? '' : 's'}</span>
+          <span class="text-sm text-zinc-500"
+            >{members.length} member{members.length === 1 ? '' : 's'}</span
+          >
         </div>
 
         <div class="mt-5 flex flex-1 flex-col gap-5">
           <ul class="flex-1 space-y-4">
             {#if members.length === 0}
-              <li class="rounded-2xl border border-white/5 bg-black/30 px-4 py-5 text-sm text-zinc-400">
+              <li
+                class="rounded-2xl border border-white/5 bg-black/30 px-4 py-5 text-sm text-zinc-400"
+              >
                 No teammates yet. Share the join link to invite teammates.
               </li>
             {:else}
               {#each members as member (member.id)}
-                <li class="flex items-center gap-4 rounded-2xl bg-black/30 px-4 py-3">
+                <li
+                  class="flex items-center gap-4 rounded-2xl bg-black/30 px-4 py-3"
+                >
                   <div
                     class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
                     style={`background:${getProfileGradient(member.id)}`}
@@ -458,7 +527,9 @@
                     {getInitials(getMemberDisplayName(member))}
                   </div>
                   <div class="flex flex-col">
-                    <span class="text-sm font-medium text-white">{getMemberDisplayName(member)}</span>
+                    <span class="text-sm font-medium text-white"
+                      >{getMemberDisplayName(member)}</span
+                    >
                     {#if member.email}
                       <span class="text-xs text-zinc-400">{member.email}</span>
                     {/if}
@@ -469,9 +540,9 @@
           </ul>
 
           <Button
-            class="mt-auto h-11 w-full rounded-xl !bg-[#FF3B30] text-base font-semibold text-white transition hover:!bg-[#ff5249] disabled:!bg-[#833030]"
-            disabled={isSyncing}
-            on:click={handleLeaveTeam}
+            class="mt-auto h-12 w-full rounded-xl !bg-[#FF3B30] text-base font-semibold text-white transition hover:!bg-[#ff5249] disabled:!bg-[#833030]"
+            disabled={isSyncing || !canEditTeam}
+            on:click={openLeaveDialog}
           >
             Leave Team
           </Button>
@@ -479,6 +550,18 @@
       </section>
     {/if}
   </div>
+
+  <ConfirmDialog
+    bind:isOpen={showLeaveDialog}
+    title="Leave team?"
+    description="You will no longer be part of this team. You can join another team later."
+    confirmText="Leave"
+    cancelText="Cancel"
+    isDangerous={true}
+    isLoading={isLeavingTeam}
+    onConfirm={confirmLeaveTeam}
+    onCancel={closeLeaveDialog}
+  />
 
   <Navbar />
 </main>
