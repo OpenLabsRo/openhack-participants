@@ -20,7 +20,6 @@
   import { setError, clearError } from '$runes/errorRune'
   import { openhackApi, isApiError } from '$lib/api/openhackApi'
   import type { Submission, Team } from '$types/team.js'
-  import type { VotingStatusResponse } from '$types/account'
 
   const DEBOUNCE_MS = 1000
 
@@ -50,10 +49,6 @@
 
   let unsubscribeTeam: (() => void) | undefined
   let unsubscribeSubmission: (() => void) | undefined
-  let votingStatus: VotingStatusResponse | null = null
-
-  $: votingEnabled = Boolean($flagsRune?.flags?.voting)
-  $: hasVoted = Boolean(votingStatus?.hasVoted)
 
   onMount(() => {
     let active = true
@@ -77,17 +72,6 @@
         if (active) {
           isInitializing = false
         }
-      }
-    }
-
-    const loadVotingStatus = async () => {
-      try {
-        const status = await openhackApi.Voting.getStatus()
-        if (active) {
-          votingStatus = status
-        }
-      } catch (error) {
-        console.error('Failed to fetch voting status:', error)
       }
     }
 
@@ -146,7 +130,6 @@
     })
 
     void load()
-    void loadVotingStatus()
 
     return () => {
       active = false
@@ -452,7 +435,7 @@
   <div
     class="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 pb-16 pt-10 md:px-8"
   >
-    <VoteBanner {votingEnabled} {hasVoted} />
+    <VoteBanner />
     {#if isInitializing}
       <section
         class="rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 shadow-lg shadow-black/30"

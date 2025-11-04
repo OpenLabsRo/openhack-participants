@@ -24,7 +24,6 @@
   import { getProfileGradient, getInitials } from '$lib/utils/profileColor.js'
   import type { Account } from '$types/account.js'
   import type { Team } from '$types/team.js'
-  import type { VotingStatusResponse } from '$types/account'
 
   const DEBOUNCE_MS = 1000
   let isInitializing = true
@@ -44,12 +43,8 @@
   let pendingTableSync: string | null = null
   let unsubscribeTeam: (() => void) | undefined
   let canEditTeam = false
-  let votingStatus: VotingStatusResponse | null = null
   let showLeaveDialog = false
   let isLeavingTeam = false
-
-  $: votingEnabled = Boolean($flagsRune?.flags?.voting)
-  $: hasVoted = Boolean(votingStatus?.hasVoted)
 
   onMount(() => {
     let active = true
@@ -73,17 +68,6 @@
         if (active) {
           isInitializing = false
         }
-      }
-    }
-
-    const loadVotingStatus = async () => {
-      try {
-        const status = await openhackApi.Voting.getStatus()
-        if (active) {
-          votingStatus = status
-        }
-      } catch (error) {
-        console.error('Failed to fetch voting status:', error)
       }
     }
 
@@ -122,7 +106,6 @@
     })
 
     void load()
-    void loadVotingStatus()
 
     return () => {
       active = false
@@ -380,7 +363,7 @@
   <TopBar />
 
   <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-5 pb-20">
-    <VoteBanner {votingEnabled} {hasVoted} />
+    <VoteBanner />
     {#if isInitializing && !hasTeam && isSyncing}
       <div class="flex flex-1 items-center justify-center py-24">
         <div

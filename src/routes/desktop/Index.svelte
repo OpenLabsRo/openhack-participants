@@ -17,7 +17,6 @@
   import { flagsRune } from '$runes/flagsRune.js'
   import { getProfileGradient } from '$lib/utils/profileColor.js'
   import QRCode from '$lib/components/shared/QRCode.svelte'
-  import type { VotingStatusResponse } from '$types/account'
 
   function getInitials(name: string | undefined | null) {
     if (!name) return 'MI'
@@ -31,10 +30,6 @@
   }
 
   let qrData = 'openhack-participant'
-  let votingStatus: VotingStatusResponse | null = null
-
-  $: votingEnabled = Boolean($flagsRune?.flags?.voting)
-  $: hasVoted = Boolean(votingStatus?.hasVoted)
 
   onMount(() => {
     let isActive = true
@@ -58,19 +53,7 @@
       }
     }
 
-    const loadVotingStatus = async () => {
-      try {
-        const status = await openhackApi.Voting.getStatus()
-        if (isActive) {
-          votingStatus = status
-        }
-      } catch (error) {
-        console.error('Failed to fetch voting status:', error)
-      }
-    }
-
     void loadTeam()
-    void loadVotingStatus()
 
     return () => {
       isActive = false
@@ -115,7 +98,7 @@
   <div
     class="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-16 pt-10 md:px-8"
   >
-    <VoteBanner {votingEnabled} {hasVoted} />
+    <VoteBanner />
     <Card class="p-6 md:px-8 md:py-3">
       <div
         class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between"

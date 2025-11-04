@@ -79,8 +79,8 @@
 
   function handleLogoClick(event: MouseEvent) {
     event.preventDefault()
-    navigate('/404')
-    currentPath.set('/404')
+    navigate('/')
+    currentPath.set('/')
   }
 
   function getInitials(name: string | undefined | null) {
@@ -146,7 +146,7 @@
   <button
     type="button"
     class="flex items-center gap-3 pl-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded"
-    aria-label="OpenHack not found"
+    aria-label="Go to home"
     onclick={handleLogoClick}
   >
     <img src="/icons/logo.svg" alt="" class="h-6 w-auto" />

@@ -5,9 +5,10 @@
 
   let showLogoutModal = false
 
-  $: displayName = [$accountRune?.firstName, $accountRune?.lastName]
-    .filter((part) => (part ?? '').trim().length > 0)
-    .join(' ') || 'Mihai Ionel'
+  $: displayName =
+    [$accountRune?.firstName, $accountRune?.lastName]
+      .filter((part) => (part ?? '').trim().length > 0)
+      .join(' ') || 'Mihai Ionel'
   $: initials = getInitials(displayName)
   $: profileGradient = getProfileGradient($accountRune?.id ?? displayName)
 
@@ -26,7 +27,7 @@
   }
 
   function handleLogoClick() {
-    navigate('/404')
+    navigate('/')
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -44,9 +45,9 @@
     type="button"
     class="rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
     onclick={handleLogoClick}
-    aria-label="Go to not found page"
+    aria-label="Go to home page"
   >
-  <img src="/icons/logo-full.svg" alt="OpenHack" class="h-8 w-auto" />
+    <img src="/icons/logo-full.svg" alt="OpenHack" class="h-8 w-auto" />
   </button>
   <button
     type="button"
@@ -81,7 +82,9 @@
       aria-describedby="logout-dialog-description"
       class="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-[#141414] p-6 text-white shadow-lg shadow-black/40"
     >
-      <h2 id="logout-dialog-title" class="text-lg font-semibold text-white">Sign out?</h2>
+      <h2 id="logout-dialog-title" class="text-lg font-semibold text-white">
+        Sign out?
+      </h2>
       <p id="logout-dialog-description" class="mt-2 text-sm text-zinc-400">
         You will need to log in again to access your OpenHack profile.
       </p>

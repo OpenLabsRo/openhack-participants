@@ -3,27 +3,33 @@
   import Navbar from '$lib/components/desktop/Navbar.svelte'
   import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte'
   import { Github } from '@lucide/svelte'
-  import { openhackApi } from '$lib/api/openhackApi'
   import { flagsRune } from '$runes/flagsRune.js'
-  import type {
-    VotingFinalistsResponse,
-    VotingStatusResponse,
-    Team,
-  } from '$types/account'
+  import {
+    votingRune,
+    votingLoading,
+    fetchVotingData,
+    castVote,
+  } from '$runes/votingRune.js'
+  import type { Team } from '$types/account'
 
-  let finalists: Team[] = []
   let selectedId: string = ''
-  let loading = true
   let error: string | null = null
-  let votingStatus: VotingStatusResponse | null = null
   let submitError: string | null = null
   let submitSuccess = false
   let showConfirmDialog = false
   let isConfirmingVote = false
 
+  // Derive selectedId based on voting status
+  $: {
+    if (hasVoted) {
+      selectedId = '' // Clear selection when user has voted
+    }
+  }
+
   $: votingEnabled = Boolean($flagsRune?.flags?.voting)
-  $: hasVoted = Boolean(votingStatus?.hasVoted)
-  $: votingOpen = Boolean(votingStatus?.votingOpen)
+  $: hasVoted = Boolean($votingRune?.hasVoted)
+  $: votingOpen = Boolean($votingRune?.votingOpen)
+  $: finalists = $votingRune?.finalists || []
   $: selectedFinalist = finalists.find((f) => f.id === selectedId)
   $: confirmDialogDescription = selectedFinalist
     ? `You are voting for ${selectedFinalist.name}. Their submission is "${selectedFinalist.submission?.name || 'Unnamed'}".`
@@ -75,12 +81,9 @@
     submitSuccess = false
 
     try {
-      await openhackApi.Voting.castVote({ teamID: selectedId })
+      await castVote(selectedId)
       submitSuccess = true
       closeConfirmDialog()
-
-      // Refresh voting status to update hasVoted flag
-      votingStatus = await openhackApi.Voting.getStatus()
     } catch (err) {
       console.error('Failed to cast vote:', err)
       submitError =
@@ -94,22 +97,21 @@
 
   onMount(async () => {
     try {
-      const response = await openhackApi.Voting.getFinalists()
-      finalists = response.finalists || []
-      if (finalists.length > 0) {
+      // Check if voting data already exists in the rune
+      if (!$votingRune) {
+        // Data doesn't exist, fetch it
+        await fetchVotingData()
+      }
+
+      // Set initial selection if user hasn't voted yet
+      if (finalists.length > 0 && !hasVoted) {
         selectedId = finalists[0].id
+      } else if (hasVoted) {
+        selectedId = ''
       }
     } catch (err) {
-      console.error('Failed to fetch finalists:', err)
+      console.error('Failed to fetch voting data:', err)
       error = 'Failed to load finalists'
-    } finally {
-      loading = false
-    }
-
-    try {
-      votingStatus = await openhackApi.Voting.getStatus()
-    } catch (err) {
-      console.error('Failed to fetch voting status:', err)
     }
   })
 </script>
@@ -129,7 +131,7 @@
       </p>
     </header>
 
-    {#if loading}
+    {#if $votingLoading}
       <div class="flex justify-center py-12">
         <div class="text-zinc-400">Loading finalists...</div>
       </div>
@@ -157,7 +159,7 @@
             class="sr-only peer"
           />
           <label
-            for={`finalist-${finalist.id}`}
+            for={hasVoted ? '' : `finalist-${finalist.id}`}
             class={getCardClass(finalist.id)}
           >
             <div class="space-y-4">
