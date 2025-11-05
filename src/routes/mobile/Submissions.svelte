@@ -7,19 +7,20 @@
   import VoteBanner from '$lib/components/shared/VoteBanner.svelte'
   import Button from '$components/ui/button/button.svelte'
   import { Input } from '$components/ui/input'
-  import { teamRune, getTeam } from '$runes/teamRune.js'
+  import { RotateCw } from '@lucide/svelte'
   import {
-    submissionRune,
-    updateName,
-    updateDesc,
-    updateRepo,
-    updatePres,
-    submissionLoading,
-  } from '$runes/submissionRune.js'
+    teamRune,
+    getTeam,
+    updateSubmissionName,
+    updateSubmissionDesc,
+    updateSubmissionRepo,
+    updateSubmissionPres,
+    teamLoading,
+  } from '$runes/teamRune.js'
   import { flagsRune } from '$runes/flagsRune.js'
   import { setError, clearError } from '$runes/errorRune'
-  import { openhackApi, isApiError } from '$lib/api/openhackApi'
-  import type { Submission, Team } from '$types/team.js'
+  import { isApiError } from '$lib/api/openhackApi'
+  import type { Team } from '$types/team.js'
 
   const DEBOUNCE_MS = 1000
 
@@ -46,8 +47,9 @@
 
   let currentTeamId: string | null = null
 
+  let isReloading = false
+
   let unsubscribeTeam: (() => void) | undefined
-  let unsubscribeSubmission: (() => void) | undefined
 
   onMount(() => {
     let active = true
@@ -62,7 +64,6 @@
           (error.status === 404 || error.status === 403 || error.status === 409)
         ) {
           teamRune.set(null)
-          submissionRune.set(null)
           clearError()
         } else {
           setError(error)
@@ -88,15 +89,15 @@
           presInput = ''
         }
       }
-    })
 
-    unsubscribeSubmission = submissionRune.subscribe((submission) => {
+      const submission = team?.submission
+
       const serverName = submission?.name ?? ''
       if (pendingNameSync !== null && serverName === pendingNameSync) {
         nameDirty = false
         pendingNameSync = null
       }
-      if (!nameDirty) {
+      if (!nameDirty || teamChanged) {
         nameInput = serverName
       }
 
@@ -105,7 +106,7 @@
         descDirty = false
         pendingDescSync = null
       }
-      if (!descDirty) {
+      if (!descDirty || teamChanged) {
         descInput = serverDesc
       }
 
@@ -114,7 +115,7 @@
         repoDirty = false
         pendingRepoSync = null
       }
-      if (!repoDirty) {
+      if (!repoDirty || teamChanged) {
         repoInput = serverRepo
       }
 
@@ -123,7 +124,7 @@
         presDirty = false
         pendingPresSync = null
       }
-      if (!presDirty) {
+      if (!presDirty || teamChanged) {
         presInput = serverPres
       }
     })
@@ -140,14 +141,15 @@
     if (descTimer) clearTimeout(descTimer)
     if (repoTimer) clearTimeout(repoTimer)
     if (presTimer) clearTimeout(presTimer)
-    if (unsubscribeTeam) unsubscribeTeam()
-    if (unsubscribeSubmission) unsubscribeSubmission()
+    if (unsubscribeTeam) {
+      unsubscribeTeam()
+      unsubscribeTeam = undefined
+    }
   })
 
   $: currentTeam = $teamRune as Team | null
-  $: currentSubmission = $submissionRune as Submission | null
   $: hasTeam = Boolean(currentTeam)
-  $: isSyncing = $submissionLoading
+  $: isSyncing = $teamLoading
   $: canEditSubmission = Boolean($flagsRune?.flags?.submissions_write)
   $: canViewSubmission = Boolean($flagsRune?.flags?.submissions_read)
   $: disableInputs = !hasTeam || !canEditSubmission || isSyncing
@@ -287,7 +289,7 @@
 
     try {
       pendingNameSync = trimmed
-      const updatedTeam = await updateName(trimmed)
+      const updatedTeam = await updateSubmissionName(trimmed)
       const updatedSubmission = updatedTeam?.submission
       nameInput = updatedSubmission?.name ?? trimmed
       pendingNameSync = null
@@ -295,7 +297,8 @@
       clearError()
     } catch (error) {
       setError(error)
-      const updatedSubmission = get(submissionRune)
+      const updatedTeam = get(teamRune)
+      const updatedSubmission = updatedTeam?.submission
       nameInput = updatedSubmission?.name ?? currentName
       pendingNameSync = null
       nameDirty = false
@@ -323,7 +326,7 @@
 
     try {
       pendingDescSync = candidate
-      const updatedTeam = await updateDesc(candidate)
+      const updatedTeam = await updateSubmissionDesc(candidate)
       const updatedSubmission = updatedTeam?.submission
       descInput = updatedSubmission?.desc ?? candidate
       pendingDescSync = null
@@ -331,7 +334,8 @@
       clearError()
     } catch (error) {
       setError(error)
-      const updatedSubmission = get(submissionRune)
+      const updatedTeam = get(teamRune)
+      const updatedSubmission = updatedTeam?.submission
       descInput = updatedSubmission?.desc ?? currentDesc
       pendingDescSync = null
       descDirty = false
@@ -359,7 +363,7 @@
 
     try {
       pendingRepoSync = normalized
-      const updatedTeam = await updateRepo(normalized)
+      const updatedTeam = await updateSubmissionRepo(normalized)
       const updatedSubmission = updatedTeam?.submission
       repoInput = updatedSubmission?.repo ?? normalized
       pendingRepoSync = null
@@ -367,7 +371,8 @@
       clearError()
     } catch (error) {
       setError(error)
-      const updatedSubmission = get(submissionRune)
+      const updatedTeam = get(teamRune)
+      const updatedSubmission = updatedTeam?.submission
       repoInput = updatedSubmission?.repo ?? currentRepo
       pendingRepoSync = null
       repoDirty = false
@@ -395,7 +400,7 @@
 
     try {
       pendingPresSync = normalized
-      const updatedTeam = await updatePres(normalized)
+      const updatedTeam = await updateSubmissionPres(normalized)
       const updatedSubmission = updatedTeam?.submission
       presInput = updatedSubmission?.pres ?? normalized
       pendingPresSync = null
@@ -403,7 +408,8 @@
       clearError()
     } catch (error) {
       setError(error)
-      const updatedSubmission = get(submissionRune)
+      const updatedTeam = get(teamRune)
+      const updatedSubmission = updatedTeam?.submission
       presInput = updatedSubmission?.pres ?? currentPres
       pendingPresSync = null
       presDirty = false
@@ -413,27 +419,38 @@
   function handleGoToTeam() {
     navigate('/team')
   }
+
+  async function handleReload() {
+    if (isReloading || $teamLoading) return
+    isReloading = true
+    try {
+      await getTeam()
+      clearError()
+    } catch (error) {
+      setError(error)
+    } finally {
+      isReloading = false
+    }
+  }
 </script>
 
 <main class="min-h-screen bg-black pb-28 text-white">
   <TopBar />
 
-  <div class="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-6">
+  <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-6 pb-20">
     <VoteBanner />
-    {#if isInitializing}
+
+    {#if isInitializing && !hasTeam && isSyncing}
       <section
-        class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 shadow-lg shadow-black/30"
+        class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 text-center shadow-lg shadow-black/30"
       >
-        <div class="h-5 w-40 animate-pulse rounded bg-white/10"></div>
-        <div class="mt-3 h-4 w-60 animate-pulse rounded bg-white/5"></div>
-        <div class="mt-8 space-y-4">
-          <div class="h-11 w-full animate-pulse rounded-xl bg-white/5"></div>
-          <div class="h-28 w-full animate-pulse rounded-xl bg-white/5"></div>
-          <div class="h-11 w-full animate-pulse rounded-xl bg-white/5"></div>
-          <div class="h-11 w-full animate-pulse rounded-xl bg-white/5"></div>
+        <div
+          class="flex h-36 w-full items-center justify-center rounded-2xl border border-white/5 bg-white/5 text-sm text-zinc-300"
+        >
+          Checking submission status…
         </div>
       </section>
-    {:else if !canViewSubmission}
+    {:else if !isInitializing && !canViewSubmission}
       <section
         class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 text-center shadow-lg shadow-black/30"
       >
@@ -463,14 +480,18 @@
       </section>
     {:else}
       <section
-        class="rounded-3xl border border-white/5 bg-[#121212] px-6 py-8 shadow-lg shadow-black/30"
+        class="rounded-2xl border border-white/5 bg-[#121212] px-5 py-7 shadow-lg shadow-black/30"
       >
-        <header class="flex flex-col gap-3">
-          <h1 class="text-xl font-semibold text-white">Submit your project</h1>
-          <div class="flex items-center justify-between text-xs text-zinc-400">
-            <span>All the info is auto-saved as you type</span>
-            <span
-              class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-zinc-200"
+        <header class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-semibold text-white">
+              Submit your project
+            </h2>
+            <p class="text-sm text-zinc-400">
+              All the info is auto-saved as you type
+            </p>
+            <div
+              class="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-200"
               aria-live="polite"
             >
               {#if isSyncing}
@@ -484,15 +505,24 @@
                 <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
                 <span>Up to date</span>
               {/if}
-            </span>
+            </div>
           </div>
+          <button
+            class="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            class:animate-spin={isReloading}
+            disabled={isSyncing || isReloading}
+            onclick={handleReload}
+            title="Reload"
+          >
+            <RotateCw class="h-4 w-4" />
+          </button>
         </header>
 
-        <div class="mt-7 flex flex-col gap-5">
-          <div class="space-y-2.5">
+        <div class="mt-6 space-y-5">
+          <div class="space-y-2">
             <label
               for="project-name"
-              class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
               >Project Name</label
             >
             <Input
@@ -506,10 +536,10 @@
             />
           </div>
 
-          <div class="space-y-2.5">
+          <div class="space-y-2">
             <label
               for="project-desc"
-              class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
               >Short project description</label
             >
             <textarea
@@ -523,10 +553,10 @@
             ></textarea>
           </div>
 
-          <div class="space-y-2.5">
+          <div class="space-y-2">
             <label
               for="project-repo"
-              class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
               >Github Link</label
             >
             <Input
@@ -540,10 +570,10 @@
             />
           </div>
 
-          <div class="space-y-2.5">
+          <div class="space-y-2">
             <label
               for="project-pres"
-              class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
               >Presentation URL</label
             >
             <Input

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
   import Navbar from '$lib/components/mobile/Navbar.svelte'
   import TopBar from '$lib/components/mobile/TopBar.svelte'
   import VoteBanner from '$lib/components/shared/VoteBanner.svelte'
@@ -13,44 +12,13 @@
   import { Input } from '$components/ui/input'
   import { Mail as MailIcon, Phone as PhoneIcon } from '@lucide/svelte'
   import { accountRune } from '$runes/accountRune.js'
-  import { openhackApi, isApiError } from '$lib/api/openhackApi'
-  import { flagsRune } from '$runes/flagsRune.js'
+  import { teamRune } from '$runes/teamRune.js'
   import { getProfileGradient, getInitials } from '$lib/utils/profileColor.js'
   import QRCode from '$lib/components/shared/QRCode.svelte'
 
-  let teamName = ''
   let qrData = 'openhack-participant'
 
-  onMount(() => {
-    let isActive = true
-
-    const loadTeam = async () => {
-      try {
-        const team = await openhackApi.Teams.detail()
-        if (isActive) {
-          teamName = team?.name ?? ''
-        }
-      } catch (error) {
-        if (isActive) {
-          if (
-            isApiError(error) &&
-            (error.status === 404 || error.status === 403)
-          ) {
-            teamName = ''
-          } else {
-            console.error('Failed to fetch team detail:', error)
-          }
-        }
-      }
-    }
-
-    void loadTeam()
-
-    return () => {
-      isActive = false
-    }
-  })
-
+  $: teamName = $teamRune?.name ?? ''
   $: firstName = $accountRune?.firstName?.trim() || 'Mihai'
   $: lastName = $accountRune?.lastName?.trim() || 'Ionel'
   $: displayName =

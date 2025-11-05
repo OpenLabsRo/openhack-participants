@@ -414,7 +414,7 @@
           class="flex h-full flex-col rounded-3xl border border-white/5 bg-[#121212] px-10 py-12 shadow-lg shadow-black/30"
         >
           <header
-            class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
           >
             <div>
               <h1 class="text-2xl font-semibold text-white">
@@ -424,9 +424,9 @@
                 All the info is auto-saved as you type
               </p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 self-end sm:self-auto">
               <div
-                class="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-200"
+                class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-200"
                 aria-live="polite"
               >
                 {#if isSyncing}
@@ -442,7 +442,7 @@
                 {/if}
               </div>
               <button
-                class="text-zinc-400 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                class="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 class:animate-spin={isReloading}
                 disabled={isSyncing || isReloading}
                 onclick={handleReload}
@@ -482,7 +482,7 @@
                   value={joinLink}
                   readonly
                   disabled
-                  class="h-12 flex-1 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100 focus-visible:border-[#444]"
+                  class="h-12 flex-1 rounded-xl border border-[#2E2E2E] bg-[#101010] px-4 text-base text-zinc-100 focus-visible:border-[#444]"
                 />
                 <Button
                   class="h-12 rounded-xl !bg-[#FE5428] px-6 text-base font-semibold text-white transition hover:!bg-[#ff734f] disabled:!bg-[#6b2a1d]"

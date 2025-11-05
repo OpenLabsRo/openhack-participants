@@ -12,7 +12,7 @@ import {
   type TeamChangeNameRequest,
 } from '../lib/api/openhackApi.js'
 import type { Account } from '../types/account.js'
-import type { Team, Submission } from '../types/team.js'
+import type { Team } from '../types/team.js'
 import type { Flags } from '../types/flags.js'
 import { accountRune, logout, whoami } from '../runes/accountRune.js'
 import {
@@ -26,11 +26,8 @@ import {
   changeTeamName,
   loadMembers,
   getTeam,
+  updateSubmissionName,
 } from '../runes/teamRune.js'
-import {
-  submissionRune,
-  updateName as updateSubmissionName,
-} from '../runes/submissionRune.js'
 import { fetchFlags, flagsRune } from '../runes/flagsRune.js'
 import { get } from 'svelte/store'
 
@@ -319,7 +316,6 @@ function resetStores() {
   accountRune.set(null)
   teamRune.set(null)
   teamMembersRune.set([])
-  submissionRune.set(null)
   flagsRune.set(null)
 }
 
@@ -400,9 +396,12 @@ async function runRuneTests() {
     assert.equal(reloadedMembers.length, 2)
 
     await updateSubmissionName('Updated Submission')
-    const submissionState = get(submissionRune) as Submission | null
+    const submissionTeamState = get(teamRune) as Team | null
+    if (!submissionTeamState)
+      throw new Error('teamRune not populated after submission update')
+    const submissionState = submissionTeamState.submission
     if (!submissionState)
-      throw new Error('submissionRune not populated after update')
+      throw new Error('submission not populated after update')
     assert.equal(submissionState.name, 'Updated Submission')
 
     await fetchFlags()

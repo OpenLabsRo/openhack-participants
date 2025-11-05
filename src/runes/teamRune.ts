@@ -184,3 +184,40 @@ export async function kick(accountId: string) {
     return await getTeam()
   })
 }
+
+/**
+ * Submission-related functions
+ * These update submission fields on the backend and sync the team state
+ */
+
+export async function updateSubmissionName(name: string) {
+  return withTeamLoading(async () => {
+    const team = await openhackApi.Submissions.updateName(name)
+    teamRune.set(team)
+    return team
+  })
+}
+
+export async function updateSubmissionDesc(desc: string) {
+  return withTeamLoading(async () => {
+    const team = await openhackApi.Submissions.updateDesc(desc)
+    teamRune.set(team)
+    return team
+  })
+}
+
+export async function updateSubmissionRepo(repo: string) {
+  return withTeamLoading(async () => {
+    const team = await openhackApi.Submissions.updateRepo(repo)
+    teamRune.set(team)
+    return team
+  })
+}
+
+export async function updateSubmissionPres(pres: string) {
+  return withTeamLoading(async () => {
+    const team = await openhackApi.Submissions.updatePres(pres)
+    teamRune.set(team)
+    return team
+  })
+}

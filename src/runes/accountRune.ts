@@ -14,7 +14,6 @@ import {
 } from '$lib/utils/minDuration.js'
 import { normalizeAccount } from '$lib/utils/normalizeAccount.js'
 import { teamRune, teamMembersRune } from './teamRune.js'
-import { submissionRune } from './submissionRune.js'
 import { flagsRune, stopPolling } from './flagsRune.js'
 import { clearError } from './errorRune.js'
 
@@ -149,7 +148,6 @@ export function logout() {
   accountRune.set(null)
   teamRune.set(null)
   teamMembersRune.set([])
-  submissionRune.set(null)
   flagsRune.set(null)
   clearError()
   stopPolling()

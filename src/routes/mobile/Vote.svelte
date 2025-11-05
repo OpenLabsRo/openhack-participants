@@ -39,7 +39,7 @@
   $: getCardClass = (id: string) => {
     const isSelected = selectedId === id
     const base =
-      'flex cursor-pointer flex-col gap-5 rounded-2xl border bg-[#101010] p-5 text-left transition duration-200'
+      'relative flex cursor-pointer flex-col gap-5 rounded-2xl border bg-[#101010] p-5 text-left transition duration-200'
     return isSelected
       ? `${base} border-[#FE5428] shadow-[0_18px_45px_-20px_rgba(254,84,40,0.85)]`
       : `${base} border-[#2E2E2E] hover:border-[#3E3E3E]`
@@ -147,18 +147,15 @@
     {:else}
       <div class="flex flex-col gap-4">
         {#each finalists as finalist (finalist.id)}
-          <input
-            type="radio"
-            id={`finalist-${finalist.id}`}
-            name="finalist-vote"
-            value={finalist.id}
-            bind:group={selectedId}
-            class="sr-only peer"
-          />
-          <label
-            for={hasVoted ? '' : `finalist-${finalist.id}`}
-            class={getCardClass(finalist.id)}
-          >
+          <label class={getCardClass(finalist.id)}>
+            <input
+              type="radio"
+              name="finalist-vote"
+              value={finalist.id}
+              bind:group={selectedId}
+              class="h-0 w-0 opacity-0 absolute"
+              disabled={hasVoted}
+            />
             <div class="space-y-4">
               <div class="flex items-center justify-between gap-3">
                 <span

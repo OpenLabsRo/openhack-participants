@@ -7,6 +7,7 @@
   import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte'
   import Button from '$components/ui/button/button.svelte'
   import { Input } from '$components/ui/input'
+  import { RotateCw } from '@lucide/svelte'
   import {
     teamRune,
     teamMembersRune,
@@ -45,6 +46,7 @@
   let canEditTeam = false
   let showLeaveDialog = false
   let isLeavingTeam = false
+  let isReloading = false
 
   onMount(() => {
     let active = true
@@ -349,6 +351,19 @@
     }
   }
 
+  async function handleReload() {
+    if (isReloading || $teamLoading) return
+    isReloading = true
+    try {
+      await Promise.all([getTeam(), loadMembers()])
+      clearError()
+    } catch (error) {
+      setError(error)
+    } finally {
+      isReloading = false
+    }
+  }
+
   function getMemberDisplayName(member: Account): string {
     const first = member.firstName?.trim() ?? ''
     const last = member.lastName?.trim() ?? ''
@@ -393,31 +408,38 @@
       <section
         class="rounded-2xl border border-white/5 bg-[#121212] px-5 py-7 shadow-lg shadow-black/30"
       >
-        <header
-          class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-        >
+        <header class="flex items-start justify-between gap-3">
           <div>
             <h2 class="text-xl font-semibold text-white">Manage your team</h2>
             <p class="text-sm text-zinc-400">
               All the info is auto-saved as you type
             </p>
+            <div
+              class="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-200"
+              aria-live="polite"
+            >
+              {#if isSyncing}
+                <span class="inline-flex h-3 w-3 items-center justify-center">
+                  <span
+                    class="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin"
+                  ></span>
+                </span>
+                <span>Syncing…</span>
+              {:else}
+                <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                <span>Up to date</span>
+              {/if}
+            </div>
           </div>
-          <div
-            class="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-200"
-            aria-live="polite"
+          <button
+            class="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            class:animate-spin={isReloading}
+            disabled={isSyncing || isReloading}
+            onclick={handleReload}
+            title="Reload"
           >
-            {#if isSyncing}
-              <span class="inline-flex h-3 w-3 items-center justify-center">
-                <span
-                  class="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin"
-                ></span>
-              </span>
-              <span>Syncing…</span>
-            {:else}
-              <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-              <span>Up to date</span>
-            {/if}
-          </div>
+            <RotateCw class="h-4 w-4" />
+          </button>
         </header>
 
         <div class="mt-6 space-y-5">
@@ -449,7 +471,7 @@
                 value={joinLink}
                 readonly
                 disabled
-                class="h-11 flex-1 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100"
+                class="h-11 w-full rounded-xl border border-[#2E2E2E] bg-[#101010] px-4 text-base text-zinc-100 focus-visible:border-[#444] sm:flex-1"
               />
               <Button
                 class="h-11 rounded-xl !bg-[#FE5428] px-5 text-base font-semibold text-white transition hover:!bg-[#ff734f] disabled:!bg-[#6b2a1d]"
