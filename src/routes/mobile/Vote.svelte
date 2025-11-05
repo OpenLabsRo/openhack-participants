@@ -74,6 +74,33 @@
     showConfirmDialog = false
   }
 
+  function handleFinalistPointer(
+    event: MouseEvent | TouchEvent,
+    finalistId: string
+  ) {
+    if (hasVoted) {
+      return
+    }
+
+    event.preventDefault()
+    selectedId = finalistId
+
+    const input = document.getElementById(
+      `mobile-finalist-${finalistId}`
+    ) as HTMLInputElement | null
+
+    if (input) {
+      input.checked = true
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+
+      try {
+        input.focus({ preventScroll: true })
+      } catch {
+        // Older browsers may throw if preventScroll is unsupported.
+      }
+    }
+  }
+
   async function confirmCastVote() {
     if (!selectedId) return
 
@@ -147,7 +174,12 @@
     {:else}
       <div class="flex flex-col gap-4">
         {#each finalists as finalist (finalist.id)}
-          <label class={getCardClass(finalist.id)}>
+          <label
+            class={getCardClass(finalist.id)}
+            for={`mobile-finalist-${finalist.id}`}
+            onmousedown={(event) => handleFinalistPointer(event, finalist.id)}
+            ontouchstart={(event) => handleFinalistPointer(event, finalist.id)}
+          >
             <input
               type="radio"
               name="finalist-vote"
@@ -155,6 +187,7 @@
               bind:group={selectedId}
               class="h-0 w-0 opacity-0 absolute"
               disabled={hasVoted}
+              id={`mobile-finalist-${finalist.id}`}
             />
             <div class="space-y-4">
               <div class="flex items-center justify-between gap-3">

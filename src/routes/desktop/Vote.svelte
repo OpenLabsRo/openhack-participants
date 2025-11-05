@@ -73,6 +73,33 @@
     showConfirmDialog = false
   }
 
+  function handleFinalistPointer(
+    event: MouseEvent | TouchEvent,
+    finalistId: string
+  ) {
+    if (hasVoted) {
+      return
+    }
+
+    event.preventDefault()
+    selectedId = finalistId
+
+    const input = document.getElementById(
+      `finalist-${finalistId}`
+    ) as HTMLInputElement | null
+
+    if (input) {
+      input.checked = true
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+
+      try {
+        input.focus({ preventScroll: true })
+      } catch {
+        // Older browsers may throw if preventScroll is unsupported.
+      }
+    }
+  }
+
   async function confirmCastVote() {
     if (!selectedId) return
 
@@ -161,6 +188,8 @@
           <label
             for={hasVoted ? '' : `finalist-${finalist.id}`}
             class={getCardClass(finalist.id)}
+            onmousedown={(event) => handleFinalistPointer(event, finalist.id)}
+            ontouchstart={(event) => handleFinalistPointer(event, finalist.id)}
           >
             <div class="space-y-4">
               <div class="flex items-center justify-between gap-3">
