@@ -401,7 +401,7 @@
           disabled={isSyncing || isCreating || !canEditTeam}
           on:click={handleCreateTeam}
         >
-          {isSyncing || isCreating ? 'Creating…' : 'Create a Team'}
+          {isSyncing || isCreating ? 'Create a Team' : 'Create a Team'}
         </Button>
       </section>
     {:else}
@@ -446,7 +446,7 @@
           <div class="space-y-2">
             <label
               for="team-name-mobile"
-              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-[0.7rem] font-medium uppercase tracking-[0.12em] text-zinc-500"
               >Team Name</label
             >
             <Input
@@ -455,14 +455,14 @@
               oninput={handleTeamNameInput}
               onblur={handleTeamNameBlur}
               disabled={isSyncing || !canEditTeam}
-              class="h-11 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100 focus-visible:border-[#444]"
+              class="h-9 rounded-lg border border-[#2E2E2E] bg-[#101010] text-sm text-zinc-100 focus-visible:border-[#444]"
             />
           </div>
 
           <div class="space-y-2">
             <label
               for="team-join-link-mobile"
-              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-[0.7rem] font-medium uppercase tracking-[0.12em] text-zinc-500"
               >Join Link</label
             >
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -471,11 +471,11 @@
                 value={joinLink}
                 readonly
                 disabled
-                class="h-11 w-full rounded-xl border border-[#2E2E2E] bg-[#101010] px-4 text-base text-zinc-100 focus-visible:border-[#444] sm:flex-1"
+                class="h-9 w-full rounded-lg border border-[#2E2E2E] bg-[#101010] px-3 text-sm text-zinc-100 focus-visible:border-[#444] sm:flex-1"
               />
               <Button
-                class="h-11 rounded-xl !bg-[#FE5428] px-5 text-base font-semibold text-white transition hover:!bg-[#ff734f] disabled:!bg-[#6b2a1d]"
-                disabled={isSyncing || !joinLink}
+                class="h-9 rounded-lg !bg-[#FE5428] px-4 text-sm font-semibold text-white transition hover:!bg-[#ff734f] disabled:!bg-[#6b2a1d]"
+                disabled={isSyncing || !joinLink || !canEditTeam}
                 on:click={copyJoinLink}
               >
                 {copied ? 'Copied!' : 'Copy'}
@@ -486,7 +486,7 @@
           <div class="space-y-2">
             <label
               for="team-table-mobile"
-              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-[0.7rem] font-medium uppercase tracking-[0.12em] text-zinc-500"
               >Table Number</label
             >
             <Input
@@ -496,7 +496,7 @@
               onblur={handleTableBlur}
               disabled={isSyncing || !canEditTeam}
               placeholder="e.g. A1"
-              class="h-11 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100 focus-visible:border-[#444]"
+              class="h-9 rounded-lg border border-[#2E2E2E] bg-[#101010] text-sm text-zinc-100 focus-visible:border-[#444]"
             />
           </div>
         </div>

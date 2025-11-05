@@ -517,11 +517,11 @@
           </div>
         </header>
 
-        <div class="mt-9 flex flex-col gap-6">
-          <div class="space-y-3">
+        <div class="mt-9 flex flex-col gap-5">
+          <div class="space-y-2">
             <label
               for="project-name"
-              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-[0.7rem] font-medium uppercase tracking-[0.12em] text-zinc-500"
               >Project Name</label
             >
             <Input
@@ -531,14 +531,14 @@
               onblur={handleNameBlur}
               placeholder="OpenHack"
               disabled={disableInputs}
-              class="h-12 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100 focus-visible:border-[#444]"
+              class="h-10 rounded-lg border border-[#2E2E2E] bg-[#101010] text-sm text-zinc-100 focus-visible:border-[#444]"
             />
           </div>
 
-          <div class="space-y-3">
+          <div class="space-y-2">
             <label
               for="project-desc"
-              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-[0.7rem] font-medium uppercase tracking-[0.12em] text-zinc-500"
               >Short project description</label
             >
             <textarea
@@ -548,14 +548,14 @@
               onblur={handleDescBlur}
               placeholder="Type your message here"
               disabled={disableInputs}
-              class="min-h-[132px] w-full resize-y rounded-xl border border-[#2E2E2E] bg-[#101010] px-4 py-3 text-base text-zinc-100 outline-none transition focus-visible:border-[#444] disabled:cursor-not-allowed disabled:opacity-60"
+              class="min-h-[110px] w-full resize-y rounded-lg border border-[#2E2E2E] bg-[#101010] px-3 py-2 text-sm text-zinc-100 outline-none transition focus-visible:border-[#444] disabled:cursor-not-allowed disabled:opacity-60"
             ></textarea>
           </div>
 
-          <div class="space-y-3">
+          <div class="space-y-2">
             <label
               for="project-repo"
-              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-[0.7rem] font-medium uppercase tracking-[0.12em] text-zinc-500"
               >Github Link</label
             >
             <Input
@@ -565,14 +565,14 @@
               onblur={handleRepoBlur}
               placeholder="https://github.com/..."
               disabled={disableInputs}
-              class="h-12 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100 focus-visible:border-[#444]"
+              class="h-10 rounded-lg border border-[#2E2E2E] bg-[#101010] text-sm text-zinc-100 focus-visible:border-[#444]"
             />
           </div>
 
-          <div class="space-y-3">
+          <div class="space-y-2">
             <label
               for="project-pres"
-              class="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500"
+              class="text-[0.7rem] font-medium uppercase tracking-[0.12em] text-zinc-500"
               >Presentation URL</label
             >
             <Input
@@ -582,9 +582,9 @@
               onblur={handlePresBlur}
               placeholder="https://we.tl/..."
               disabled={disableInputs}
-              class="h-12 rounded-xl border border-[#2E2E2E] bg-[#101010] text-base text-zinc-100 focus-visible:border-[#444]"
+              class="h-10 rounded-lg border border-[#2E2E2E] bg-[#101010] text-sm text-zinc-100 focus-visible:border-[#444]"
             />
-            <p class="text-sm text-zinc-500">
+            <p class="text-xs text-zinc-500">
               You will have to upload your presentation/slides on a platform
               like Google Drive or WeTransfer in order to present.
             </p>
