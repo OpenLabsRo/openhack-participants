@@ -7,6 +7,7 @@ export interface PromotionalService {
   icon: any // ComponentType for Lucide icons, or string path for images
   color?: string // Only used for Lucide icons
   isImage?: boolean // True if icon is an image path, false if Lucide component
+  showModal?: boolean // True if this service should show a promotional code modal instead of opening a link
 }
 
 export const promotionalsMap: Record<string, PromotionalService> = {
@@ -24,6 +25,35 @@ export const promotionalsMap: Record<string, PromotionalService> = {
     name: 'Vmax',
     icon: '/icons/vmax.png',
     isImage: true,
+  },
+  blue: {
+    isImage: true,
+    icon: 'icons/blue.png',
+    name: 'Blue',
+    showModal: true,
+  },
+  framer: {
+    isImage: true,
+    icon: 'icons/framer.svg',
+    name: 'Framer',
+    showModal: true,
+  },
+  linearity: {
+    isImage: true,
+    icon: 'icons/linearity.svg',
+    name: 'Linearity',
+  },
+  mobbin: {
+    isImage: true,
+    icon: 'icons/mobbin.svg',
+    name: 'Mobbin',
+    showModal: true,
+  },
+  raycast: {
+    isImage: true,
+    icon: 'icons/raycast.svg',
+    name: 'Raycast',
+    showModal: true,
   },
 }
 
@@ -55,6 +85,7 @@ export function getPromotionalConfig(serviceName: string): PromotionalService {
       icon: DefaultIcon,
       color: 'text-amber-400',
       isImage: false,
+      showModal: true, // Show promotional code modal for services not explicitly configured
     }
   )
 }

@@ -47,7 +47,7 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4"
     on:click={handleBackdropClick}
     on:keydown={(e) => e.key === 'Escape' && closeModal()}
     role="dialog"

@@ -22,6 +22,7 @@
   } from '$lib/data/promotionalsConfig.js'
   import QRCode from '$lib/components/shared/QRCode.svelte'
   import VmaxImageModal from '$lib/components/shared/VmaxImageModal.svelte'
+  import PromotionalCodeModal from '$lib/components/shared/PromotionalCodeModal.svelte'
 
   function getInitials(name: string | undefined | null) {
     if (!name) return 'MI'
@@ -37,6 +38,9 @@
   let qrData = 'openhack-participant'
   let vmaxModalOpen = false
   let vmaxImageUrl = ''
+  let promotionalCodeModalOpen = false
+  let promotionalCodeServiceName = ''
+  let promotionalCode = ''
 
   function handlePromotionalClick(
     e: MouseEvent,
@@ -47,6 +51,14 @@
       e.preventDefault()
       vmaxImageUrl = getVoucherUrl(serviceName, promoData)
       vmaxModalOpen = true
+    } else {
+      const config = getPromotionalConfig(serviceName)
+      if (config.showModal && typeof promoData === 'string') {
+        e.preventDefault()
+        promotionalCodeServiceName = config.name
+        promotionalCode = promoData
+        promotionalCodeModalOpen = true
+      }
     }
   }
 
@@ -187,17 +199,22 @@
           <div class="flex flex-wrap gap-3">
             {#each Object.entries($promotionalsRune) as [serviceName, promoData] (serviceName)}
               {@const isVmax = serviceName.toLowerCase() === 'vmax'}
+              {@const config = getPromotionalConfig(serviceName)}
+              {@const shouldShowModal = config.showModal && !isVmax}
               {@const link =
                 typeof promoData === 'string'
                   ? isVmax
                     ? getVoucherUrl(serviceName, promoData)
-                    : promoData
+                    : shouldShowModal
+                      ? '#'
+                      : promoData
                   : ''}
-              {@const config = getPromotionalConfig(serviceName)}
               <a
-                href={isVmax ? '#' : link}
-                target={isVmax ? undefined : '_blank'}
-                rel={isVmax ? undefined : 'noopener noreferrer'}
+                href={link}
+                target={!isVmax && !shouldShowModal ? '_blank' : undefined}
+                rel={!isVmax && !shouldShowModal
+                  ? 'noopener noreferrer'
+                  : undefined}
                 on:click={(e) =>
                   handlePromotionalClick(e, serviceName, promoData)}
                 class="basis-[calc(50%-6px)] md:basis-[calc(33.333%-8px)] flex flex-row items-center justify-start gap-2 rounded-lg border border-[#2E2E2E] bg-[#101010] p-3 transition-all hover:border-zinc-400 hover:bg-[#1a1a1a]"
@@ -206,12 +223,12 @@
                   <img
                     src={config.icon}
                     alt={config.name}
-                    class="h-8 w-8 flex-shrink-0 object-cover"
+                    class="h-auto w-[25px] flex-shrink-0 object-cover"
                   />
                 {:else}
                   <svelte:component
                     this={config.icon}
-                    class="h-8 w-8 flex-shrink-0 {config.color}"
+                    class="h-auto w-[25px] flex-shrink-0 {config.color}"
                   />
                 {/if}
                 <span
@@ -313,3 +330,8 @@
 </main>
 
 <VmaxImageModal bind:isOpen={vmaxModalOpen} imageUrl={vmaxImageUrl} />
+<PromotionalCodeModal
+  bind:isOpen={promotionalCodeModalOpen}
+  serviceName={promotionalCodeServiceName}
+  {promotionalCode}
+/>

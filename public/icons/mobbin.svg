@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="876"
-   height="876"
-   viewBox="0 0 876 876"
-   fill="white"
+   width="139"
+   height="64"
+   viewBox="0 0 139 64"
+   fill="none"
    version="1.1"
-   id="svg2"
-   sodipodi:docname="elevenlabs.svg"
+   id="svg1"
+   sodipodi:docname="mobbin.svg"
    inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
-     id="defs2" />
+     id="defs1" />
   <sodipodi:namedview
-     id="namedview2"
+     id="namedview1"
      pagecolor="#ffffff"
      bordercolor="#000000"
      borderopacity="0.25"
@@ -23,23 +23,18 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.63641553"
-     inkscape:cx="215.26816"
-     inkscape:cy="263.97848"
+     inkscape:zoom="8.2482014"
+     inkscape:cx="70.31836"
+     inkscape:cy="31.037069"
      inkscape:window-width="2418"
      inkscape:window-height="1300"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg2" />
+     inkscape:current-layer="svg1" />
   <path
-     d="M 515.13901,119.9426 H 678.84484 V 763.12825 H 515.13901 Z"
-     fill="#ffffff"
+     d="M84.3504 64H48.1695V47.315L32.569 63.9989L0 63.9841V29.9515L28.31 0H67.4439V15.9214L82.6881 0H116.593V26.1874H139V64H99.1163V48.208L84.3504 64Z"
+     fill="#1E1E1E"
      id="path1"
-     style="stroke-width:2.45151" />
-  <path
-     d="M 187.72735,119.9426 H 351.43318 V 763.12825 H 187.72735 Z"
-     fill="#ffffff"
-     id="path2"
-     style="stroke-width:2.45151" />
+     style="fill:#ffffff;fill-opacity:1" />
 </svg>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   role="img"
+   viewBox="0 0 24 24"
+   id="Raycast--Streamline-Simple-Icons"
+   height="24"
+   width="24"
+   version="1.1"
+   sodipodi:docname="raycast.svg"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="32.851003"
+     inkscape:cx="9.8627127"
+     inkscape:cy="10.715046"
+     inkscape:window-width="2418"
+     inkscape:window-height="1300"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Raycast--Streamline-Simple-Icons" />
+  <desc
+     id="desc1">
+    Raycast Streamline Icon: https://streamlinehq.com
+  </desc>
+  <title
+     id="title1">Raycast</title>
+  <path
+     d="M6.004 15.492v2.504L0 11.992l1.258 -1.249Zm2.504 2.504H6.004L12.008 24l1.253 -1.253zm14.24 -4.747L24 11.997 12.003 0 10.75 1.251 15.491 6h-2.865L9.317 2.692 8.065 3.944l2.06 2.06H8.691v9.31H18v-1.432l2.06 2.06 1.252 -1.252L18 11.37V8.506ZM6.63 5.372 5.38 6.625l1.342 1.343 1.251 -1.253Zm10.655 10.655 -1.247 1.251 1.342 1.343 1.253 -1.251zM3.944 8.059 2.692 9.31l3.312 3.314v-2.506zm9.936 9.937h-2.504l3.314 3.312 1.25 -1.252z"
+     fill="#ffffff"
+     stroke-width="1"
+     id="path1"
+     style="fill:#ff6363;fill-opacity:1" />
+</svg>
