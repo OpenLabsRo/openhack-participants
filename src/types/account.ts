@@ -23,6 +23,7 @@ export interface Account {
   present?: boolean
   university?: string
   hasVoted?: boolean
+  promotionals?: Record<string, string>
 }
 
 export interface TeamSubmission {

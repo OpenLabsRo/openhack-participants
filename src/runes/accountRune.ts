@@ -24,6 +24,13 @@ import { clearError } from './errorRune.js'
  */
 export const accountRune = writable<Account | null>(null)
 
+/**
+ * promotionalsRune store
+ * - holds the promotional codes assigned to the current account
+ * - updated by `fetchPromotionals`
+ */
+export const promotionalsRune = writable<Record<string, string> | null>(null)
+
 const accountLoadingCounter = writable(0)
 export const accountLoadingPending = derived(
   accountLoadingCounter,
@@ -139,6 +146,22 @@ export async function whoami() {
 }
 
 /**
+ * fetchPromotionals()
+ * - Purpose: Fetch the promotional codes assigned to the current account.
+ * - Input: none
+ * - Output: record of promotional codes (key-value pairs)
+ * - Side effects: updates `promotionalsRune` with the returned promotionals
+ * - Error modes: throws if the token is invalid or network fails
+ */
+export async function fetchPromotionals() {
+  return withAccountLoading(async () => {
+    const promotionals = await openhackApi.Accounts.promotionals()
+    promotionalsRune.set(promotionals)
+    return promotionals
+  })
+}
+
+/**
  * logout()
  * - Purpose: Clear local auth state and remove token header.
  * - Side effects: removes stored token, clears all runes, and stops polling
@@ -146,6 +169,7 @@ export async function whoami() {
 export function logout() {
   removeToken()
   accountRune.set(null)
+  promotionalsRune.set(null)
   teamRune.set(null)
   teamMembersRune.set([])
   flagsRune.set(null)

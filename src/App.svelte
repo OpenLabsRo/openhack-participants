@@ -8,6 +8,7 @@
     getToken,
     whoami,
     removeToken,
+    fetchPromotionals,
   } from '$runes/accountRune'
   import { navigate } from 'svelte5-router'
   import {
@@ -155,8 +156,9 @@
             // If a token exists, try to fetch the user's account data to restore the session
             try {
               await whoami()
-              // After successful whoami, fetch flags for the user
+              // After successful whoami, fetch flags and promotionals for the user
               await fetchFlags()
+              await fetchPromotionals()
             } catch (error) {
               console.error('Failed to restore session:', error)
               // If the token is invalid, remove it and redirect to the login page

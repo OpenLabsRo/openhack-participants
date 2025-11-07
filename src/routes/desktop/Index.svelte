@@ -11,12 +11,17 @@
   } from '$components/ui/card'
   import { Input } from '$components/ui/input'
   import { Mail as MailIcon, Phone as PhoneIcon } from '@lucide/svelte'
-  import { accountRune } from '$runes/accountRune.js'
+  import { accountRune, promotionalsRune } from '$runes/accountRune.js'
   import { teamRune, getTeam } from '$runes/teamRune.js'
   import { openhackApi, isApiError } from '$lib/api/openhackApi'
   import { flagsRune } from '$runes/flagsRune.js'
   import { getProfileGradient } from '$lib/utils/profileColor.js'
+  import {
+    getPromotionalConfig,
+    getVoucherUrl,
+  } from '$lib/data/promotionalsConfig.js'
   import QRCode from '$lib/components/shared/QRCode.svelte'
+  import VmaxImageModal from '$lib/components/shared/VmaxImageModal.svelte'
 
   function getInitials(name: string | undefined | null) {
     if (!name) return 'MI'
@@ -30,6 +35,20 @@
   }
 
   let qrData = 'openhack-participant'
+  let vmaxModalOpen = false
+  let vmaxImageUrl = ''
+
+  function handlePromotionalClick(
+    e: MouseEvent,
+    serviceName: string,
+    promoData: unknown
+  ) {
+    if (serviceName.toLowerCase() === 'vmax' && typeof promoData === 'string') {
+      e.preventDefault()
+      vmaxImageUrl = getVoucherUrl(serviceName, promoData)
+      vmaxModalOpen = true
+    }
+  }
 
   onMount(() => {
     let isActive = true
@@ -156,6 +175,56 @@
       </div>
     </Card>
 
+    {#if $promotionalsRune && Object.keys($promotionalsRune).length > 0}
+      <Card>
+        <CardHeader class="px-6 py-6 pb-3 md:px-8 md:py-7 md:pb-4">
+          <CardTitle>Special Offers</CardTitle>
+          <CardDescription
+            >Exclusive promotions and offers for participants.</CardDescription
+          >
+        </CardHeader>
+        <CardContent class="px-6 pb-6 pt-0 md:px-8 md:pb-8">
+          <div class="flex flex-wrap gap-3">
+            {#each Object.entries($promotionalsRune) as [serviceName, promoData] (serviceName)}
+              {@const isVmax = serviceName.toLowerCase() === 'vmax'}
+              {@const link =
+                typeof promoData === 'string'
+                  ? isVmax
+                    ? getVoucherUrl(serviceName, promoData)
+                    : promoData
+                  : ''}
+              {@const config = getPromotionalConfig(serviceName)}
+              <a
+                href={isVmax ? '#' : link}
+                target={isVmax ? undefined : '_blank'}
+                rel={isVmax ? undefined : 'noopener noreferrer'}
+                on:click={(e) =>
+                  handlePromotionalClick(e, serviceName, promoData)}
+                class="basis-[calc(50%-6px)] md:basis-[calc(33.333%-8px)] flex flex-row items-center justify-start gap-2 rounded-lg border border-[#2E2E2E] bg-[#101010] p-3 transition-all hover:border-zinc-400 hover:bg-[#1a1a1a]"
+              >
+                {#if config.isImage}
+                  <img
+                    src={config.icon}
+                    alt={config.name}
+                    class="h-8 w-8 flex-shrink-0 object-cover"
+                  />
+                {:else}
+                  <svelte:component
+                    this={config.icon}
+                    class="h-8 w-8 flex-shrink-0 {config.color}"
+                  />
+                {/if}
+                <span
+                  class="text-left text-sm font-semibold text-zinc-100 line-clamp-2"
+                  >{config.name}</span
+                >
+              </a>
+            {/each}
+          </div>
+        </CardContent>
+      </Card>
+    {/if}
+
     <Card>
       <CardHeader class="px-6 py-6 pb-3 md:px-8 md:py-7 md:pb-4">
         <CardTitle>Personal Information</CardTitle>
@@ -242,3 +311,5 @@
     </Card>
   </div>
 </main>
+
+<VmaxImageModal bind:isOpen={vmaxModalOpen} imageUrl={vmaxImageUrl} />

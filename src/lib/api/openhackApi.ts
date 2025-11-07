@@ -121,6 +121,11 @@ export function createApiHelpers(apiClient: AxiosInstance = api) {
       ),
     // flags retrieves participant feature flags.
     flags: () => request<Flags>(() => apiClient.get('/accounts/flags')),
+    // promotionals retrieves promotional codes assigned to the participant.
+    promotionals: () =>
+      request<Record<string, string>>(() =>
+        apiClient.get('/accounts/promotionals')
+      ),
   }
 
   const Teams = {
