@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { navigate } from 'svelte5-router'
   import TopBar from '$lib/components/mobile/TopBar.svelte'
   import Navbar from '$lib/components/mobile/Navbar.svelte'
   import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte'
@@ -124,6 +125,12 @@
   }
 
   onMount(async () => {
+    // Check if voting is enabled, redirect if not
+    if (!$flagsRune?.flags?.voting) {
+      navigate('/')
+      return
+    }
+
     try {
       // Check if voting data already exists in the rune
       if (!$votingRune) {
@@ -245,7 +252,7 @@
 
     <button
       type="button"
-      disabled={!selectedId || hasVoted || !votingEnabled}
+      disabled={hasVoted}
       onclick={openConfirmDialog}
       class="w-full rounded-xl bg-[#FE5428] py-3 text-base font-semibold text-white shadow-[0_22px_48px_-20px_rgba(254,84,40,0.85)] transition hover:bg-[#fe5428]/90 focus-visible:outline focus-visible:outline-offset-4 focus-visible:outline-[#FE5428] disabled:opacity-50 disabled:cursor-not-allowed"
       aria-label="Cast your vote"

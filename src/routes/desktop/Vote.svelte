@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { navigate } from 'svelte5-router'
   import Navbar from '$lib/components/desktop/Navbar.svelte'
   import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte'
   import { Github } from '@lucide/svelte'
@@ -77,12 +78,14 @@
     event: MouseEvent | TouchEvent,
     finalistId: string
   ) {
-    if (hasVoted) {
+    if (hasVoted || !finalistId) {
       return
     }
 
     event.preventDefault()
     selectedId = finalistId
+    console.log('Selected finalist ID:', finalistId)
+    console.log('Current selectedId:', selectedId)
 
     const input = document.getElementById(
       `finalist-${finalistId}`
@@ -90,6 +93,7 @@
 
     if (input) {
       input.checked = true
+      console.log('Input checked:', input.checked, 'Input value:', input.value)
       input.dispatchEvent(new Event('change', { bubbles: true }))
 
       try {
@@ -123,6 +127,12 @@
   }
 
   onMount(async () => {
+    // Check if voting is enabled, redirect if not
+    if (!$flagsRune?.flags?.voting) {
+      navigate('/')
+      return
+    }
+
     try {
       // Check if voting data already exists in the rune
       if (!$votingRune) {
@@ -175,7 +185,7 @@
         No finalists available at this time.
       </div>
     {:else}
-      <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div class="flex flex-wrap justify-center gap-6">
         {#each finalists as finalist (finalist.id)}
           <input
             type="radio"
@@ -187,43 +197,48 @@
           />
           <label
             for={hasVoted ? '' : `finalist-${finalist.id}`}
-            class={getCardClass(finalist.id)}
+            class="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]"
             onmousedown={(event) => handleFinalistPointer(event, finalist.id)}
             ontouchstart={(event) => handleFinalistPointer(event, finalist.id)}
           >
-            <div class="space-y-4">
-              <div class="flex items-center justify-between gap-3">
-                <span
-                  class="text-xs font-medium uppercase tracking-[0.2em] text-zinc-500"
-                >
-                  {finalist.name}
-                </span>
-                <span class={getRadioRingClass(finalist.id)} aria-hidden="true">
-                  <span class={getRadioDotClass(finalist.id)}></span>
-                </span>
+            <div class={getCardClass(finalist.id)}>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                  <span
+                    class="text-xs font-medium uppercase tracking-[0.2em] text-zinc-500"
+                  >
+                    {finalist.name}
+                  </span>
+                  <span
+                    class={getRadioRingClass(finalist.id)}
+                    aria-hidden="true"
+                  >
+                    <span class={getRadioDotClass(finalist.id)}></span>
+                  </span>
+                </div>
+                <h2 class="text-2xl font-semibold text-white md:text-3xl">
+                  {finalist.submission?.name || 'Unnamed Submission'}
+                </h2>
+                <p class="text-sm leading-relaxed text-zinc-400 md:text-base">
+                  {finalist.submission?.desc || 'No description available'}
+                </p>
               </div>
-              <h2 class="text-2xl font-semibold text-white md:text-3xl">
-                {finalist.submission?.name || 'Unnamed Submission'}
-              </h2>
-              <p class="text-sm leading-relaxed text-zinc-400 md:text-base">
-                {finalist.submission?.desc || 'No description available'}
-              </p>
-            </div>
 
-            <a
-              href={finalist.submission?.repo || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-8 flex items-center gap-2 text-sm text-zinc-400 transition hover:text-white md:mt-10"
-              onclick={(e) => handleGithubClick(e, finalist.submission?.repo)}
-            >
-              <Github class="h-5 w-5 text-zinc-500" aria-hidden="true" />
-              <span>
-                Open project on <span class="font-semibold text-white"
-                  >GitHub</span
-                >
-              </span>
-            </a>
+              <a
+                href={finalist.submission?.repo || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-8 flex items-center gap-2 text-sm text-zinc-400 transition hover:text-white md:mt-10"
+                onclick={(e) => handleGithubClick(e, finalist.submission?.repo)}
+              >
+                <Github class="h-5 w-5 text-zinc-500" aria-hidden="true" />
+                <span>
+                  Open project on <span class="font-semibold text-white"
+                    >GitHub</span
+                  >
+                </span>
+              </a>
+            </div>
           </label>
         {/each}
       </div>
@@ -248,7 +263,7 @@
     <div class="pt-2">
       <button
         type="button"
-        disabled={!selectedId || hasVoted || !votingEnabled}
+        disabled={hasVoted}
         onclick={openConfirmDialog}
         class="w-full rounded-xl bg-[#FE5428] py-3 text-base font-semibold text-white shadow-[0_22px_48px_-20px_rgba(254,84,40,0.85)] transition hover:bg-[#fe5428]/90 focus-visible:outline focus-visible:outline-offset-4 focus-visible:outline-[#FE5428] disabled:opacity-50 disabled:cursor-not-allowed md:text-lg"
         aria-label="Cast your vote"
